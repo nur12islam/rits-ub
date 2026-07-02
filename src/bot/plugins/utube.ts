@@ -41,7 +41,7 @@ export const ytinfoPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            const { stdout } = await execPromise(`${ytDlp} -j --no-playlist "${link}"`);
+            const { stdout } = await execPromise(`${ytDlp} --js-runtimes nodejs -j --no-playlist "${link}"`);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
@@ -103,7 +103,7 @@ export const ytdesPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            const { stdout } = await execPromise(`${ytDlp} -j --no-playlist "${link}"`);
+            const { stdout } = await execPromise(`${ytDlp} --js-runtimes nodejs -j --no-playlist "${link}"`);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
@@ -176,6 +176,7 @@ export const ytdlPlugin = {
         }
         
         const args = [
+            "--js-runtimes", "nodejs",
             "--no-playlist",
             "-f", formatOpt,
             "-o", path.join(downDir, "%(title)s-%(format)s.%(ext)s")
