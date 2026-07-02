@@ -8,7 +8,7 @@ export default [
     name: "Logs",
     description: "Check RITS logs.",
     command: "logs",
-    category: "Developer",
+    usage: "Use .logs to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       await event.message.edit({ text: "`checking logs ...`" });
@@ -35,7 +35,7 @@ export default [
     name: "JSON",
     description: "Message object to JSON.",
     command: "json",
-    category: "Developer",
+    usage: "Use .json to execute this command.", category: "Developer",
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();
       const targetMsg = reply || event.message;
@@ -61,7 +61,7 @@ export default [
     name: "Status",
     description: "List plugins, commands, filters status.",
     command: "status",
-    category: "Developer",
+    usage: "Use .status to execute this command.", category: "Developer",
     handler: async (event: NewMessageEvent) => {
         // We'll dynamically read from pluginManager
         const { getLoadedPlugins } = await import("../pluginManager.js");

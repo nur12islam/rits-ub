@@ -6,7 +6,7 @@ export default [
     name: "Add Sudo",
     description: "Add a user to sudo so they can execute commands.",
     command: "addsudo",
-    category: "Admin",
+    usage: "Use .addsudo to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();
@@ -23,7 +23,7 @@ export default [
     name: "Remove Sudo",
     description: "Remove a user from sudo.",
     command: "rmsudo",
-    category: "Admin",
+    usage: "Use .rmsudo to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();
@@ -40,7 +40,7 @@ export default [
     name: "Sudo List",
     description: "List all sudo users.",
     command: "sudolist",
-    category: "Admin",
+    usage: "Use .sudolist to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       if (sudoUsers.size === 0) {

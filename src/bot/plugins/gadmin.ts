@@ -80,7 +80,7 @@ export const promotePlugin = {
     name: "Promote",
     description: "Promotes a user in the group.",
     command: "promote",
-    category: "Admin",
+    usage: "Use .promote to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId, customRank] = await extractUserAndText(event, text);
@@ -136,7 +136,7 @@ export const demotePlugin = {
     name: "Demote",
     description: "Demotes a user in the group.",
     command: "demote",
-    category: "Admin",
+    usage: "Use .demote to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId] = await extractUserAndText(event, text);
@@ -192,7 +192,7 @@ export const banPlugin = {
     name: "Ban",
     description: "Bans a user in the group.",
     command: "ban",
-    category: "Admin",
+    usage: "Use .ban to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId, reason, flags] = await extractUserAndText(event, text);
@@ -246,7 +246,7 @@ export const unbanPlugin = {
     name: "Unban",
     description: "Unbans a user in the group.",
     command: "unban",
-    category: "Admin",
+    usage: "Use .unban to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId] = await extractUserAndText(event, text);
@@ -300,7 +300,7 @@ export const kickPlugin = {
     name: "Kick",
     description: "Kicks a user in the group.",
     command: "kick",
-    category: "Admin",
+    usage: "Use .kick to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId] = await extractUserAndText(event, text);
@@ -354,7 +354,7 @@ export const mutePlugin = {
     name: "Mute",
     description: "Mutes a user in the group.",
     command: "mute",
-    category: "Admin",
+    usage: "Use .mute to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId, reason, flags] = await extractUserAndText(event, text);
@@ -408,7 +408,7 @@ export const unmutePlugin = {
     name: "Unmute",
     description: "Unmutes a user in the group.",
     command: "unmute",
-    category: "Admin",
+    usage: "Use .unmute to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [userId] = await extractUserAndText(event, text);
@@ -462,7 +462,7 @@ export const pinPlugin = {
     name: "Pin",
     description: "Pins or unpins a message.",
     command: "pin",
-    category: "Admin",
+    usage: "Use .pin to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [_, __, flags] = await extractUserAndText(event, text);
@@ -514,7 +514,7 @@ export const gpicPlugin = {
     name: "Gpic",
     description: "Set or delete chat photo.",
     command: "gpic",
-    category: "Admin",
+    usage: "Use .gpic to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [_, __, flags] = await extractUserAndText(event, text);
@@ -572,7 +572,7 @@ export const smodePlugin = {
     name: "Smode",
     description: "Turn on/off chat slow mode.",
     command: "smode",
-    category: "Admin",
+    usage: "Use .smode to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [_, __, flags] = await extractUserAndText(event, text);
@@ -609,7 +609,7 @@ export const zombiesPlugin = {
     name: "Zombies",
     description: "Clean zombie accounts.",
     command: "zombies",
-    category: "Admin",
+    usage: "Use .zombies to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const [_, __, flags] = await extractUserAndText(event, text);

@@ -6,7 +6,7 @@ export default [
     name: "Set Name",
     description: "Change your profile name.",
     command: "setname",
-    category: "General",
+    usage: "Use .setname to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.setname\s*/, "") || "";
       if (!text) return;
@@ -29,7 +29,7 @@ export default [
     name: "Set Bio",
     description: "Change your profile bio.",
     command: "setbio",
-    category: "General",
+    usage: "Use .setbio to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.setbio\s*/, "") || "";
       if (!text) return;
@@ -48,7 +48,7 @@ export default [
     name: "Block User",
     description: "Blocks the replied user.",
     command: "block",
-    category: "General",
+    usage: "Use .block to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();
       if (!reply || !reply.senderId) {

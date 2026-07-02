@@ -7,7 +7,7 @@ export default {
   name: "Install Plugin",
   description: "Install a plugin from a replied file.",
   command: "install",
-    category: "Developer",
+    usage: "Use .install to execute this command.", category: "Developer",
   ownerOnly: true,
   handler: async (event: NewMessageEvent) => {
     const reply = await event.message.getReplyMessage();

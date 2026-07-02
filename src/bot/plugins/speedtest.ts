@@ -18,7 +18,7 @@ export default {
     name: "Speedtest",
     description: "Test your server speed.",
     command: "speedtest",
-    category: "System",
+    usage: "Use .speedtest to execute this command.", category: "System",
     handler: async (event: NewMessageEvent) => {
         const msg = await event.message.edit({ text: "`Running speed test . . .`" });
         

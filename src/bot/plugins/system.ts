@@ -8,7 +8,7 @@ export default [
     name: "Restart",
     description: "Restarts the RITS.",
     command: "restart",
-    category: "Developer",
+    usage: "Use .restart to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       await event.message.edit({ text: "`Restarting RITS Services...`" });
@@ -19,7 +19,7 @@ export default [
     name: "Shutdown",
     description: "Shuts down the RITS.",
     command: "shutdown",
-    category: "Developer",
+    usage: "Use .shutdown to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       await event.message.edit({ text: "`shutting down ...`" });
@@ -30,7 +30,7 @@ export default [
     name: "Sleep",
     description: "Sleeps the RITS for N seconds.",
     command: "sleep",
-    category: "Developer",
+    usage: "Use .sleep to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.sleep\s*/, "") || "";
@@ -44,7 +44,7 @@ export default [
     name: "Set Var",
     description: "Set an environment variable.",
     command: "setvar",
-    category: "Developer",
+    usage: "Use .setvar to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.setvar\s*/, "") || "";
@@ -72,7 +72,7 @@ export default [
     name: "Get Var",
     description: "Get an environment variable.",
     command: "getvar",
-    category: "Developer",
+    usage: "Use .getvar to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const key = event.message.text?.replace(/^\.getvar\s*/, "")?.trim();
@@ -92,7 +92,7 @@ export default [
     name: "Delete Var",
     description: "Delete an environment variable.",
     command: "delvar",
-    category: "Developer",
+    usage: "Use .delvar to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const key = event.message.text?.replace(/^\.delvar\s*/, "")?.trim();

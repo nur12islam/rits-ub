@@ -10,6 +10,7 @@ export interface Plugin {
   name: string;
   description: string;
   command: string;
+  usage?: string;
   aliases?: string[];
   category?: string;
   ownerOnly?: boolean;
@@ -17,6 +18,8 @@ export interface Plugin {
 }
 
 const plugins: Plugin[] = [];
+
+let isListenerAttached = false;
 
 export async function loadPlugins(client: TelegramClient) {
   console.log("Loading plugins...");
@@ -56,6 +59,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/ocr.js"),
     await import("./plugins/error_logger.js"),
     await import("./plugins/paste.js"),
+    await import("./plugins/sangmata.js"),
   ];
 
   for (const mod of modules) {
@@ -83,27 +87,46 @@ export async function loadPlugins(client: TelegramClient) {
     }
   }
 
+  if (!isListenerAttached) {
+    client.addEventHandler(handleIncomingCommand, new NewMessage({}));
+    
+    import("./index.js").then(({ assistantBot }) => {
+      if (assistantBot) {
+        assistantBot.addEventHandler(handleAssistantCommand, new NewMessage({ incoming: true }));
+      }
+    }).catch(() => {});
+    
+    isListenerAttached = true;
+  }
+
   console.log(`Successfully loaded ${plugins.length} commands.`);
 }
 
 function registerPlugin(plugin: Plugin, client: TelegramClient) {
+  if (plugins.find(p => p.command === plugin.command)) {
+    const idx = plugins.findIndex(p => p.command === plugin.command);
+    plugins[idx] = plugin; // Update existing plugin
+    return;
+  }
   plugins.push(plugin);
-  
-  // Register the event listener for this command on RITS
-  client.addEventHandler(async (event: NewMessageEvent) => {
-    const message = event.message;
-    const isOut = isOutgoing(event);
-    const sudo = isSudo(event);
-    
-    // Check permissions
-    if (!isOut && !sudo) return;
-    if (plugin.ownerOnly && !isOut) return;
+}
 
-    // Check if message text exactly matches command OR starts with command + space
-    const text = message.text || "";
+async function handleIncomingCommand(event: NewMessageEvent) {
+  const message = event.message;
+  const isOut = isOutgoing(event);
+  const sudo = isSudo(event);
+  
+  if (!isOut && !sudo) return;
+
+  const text = message.text || "";
+  if (!text.startsWith(COMMAND_PREFIX)) return;
+
+  for (const plugin of plugins) {
+    if (plugin.ownerOnly && !isOut) continue;
+
     const commandStr = COMMAND_PREFIX + plugin.command;
-    
     let isMatch = text === commandStr || text.startsWith(commandStr + " ") || text.startsWith(commandStr + "\n");
+    
     if (!isMatch && plugin.aliases) {
         for (const alias of plugin.aliases) {
             const aliasStr = COMMAND_PREFIX + alias;
@@ -115,67 +138,68 @@ function registerPlugin(plugin: Plugin, client: TelegramClient) {
     }
     
     if (isMatch) {
-      // Monkey-patch edit for sudo users so plugins don't crash when trying to edit a message they don't own
       if (!isOut) {
           const originalEdit = message.edit.bind(message);
           message.edit = async (args: any) => {
               return await message.reply({ message: args.text, ...args });
           };
       }
-
       try {
         await plugin.handler(event);
       } catch (err) {
         console.error(`Plugin ${plugin.name} error:`, err);
         await event.message.edit({ text: `**Error in ${plugin.name}:** \`${String(err)}\`` });
       }
+      return; // Stop after executing one command
     }
-  }, new NewMessage({}));
+  }
+}
 
-  // Register on Assistant Bot if available
-  import("./index.js").then(({ assistantBot, logChannelId, isSudo }) => {
-    if (assistantBot) {
-      // 1. Normal command handler for assistant bot
-      assistantBot.addEventHandler(async (event: NewMessageEvent) => {
-        const message = event.message;
-        
-        const sudo = isSudo(event);
-        const isOwner = event.message.senderId ? Config.OWNER_ID.includes(Number(event.message.senderId)) : false;
-        
-        if (!sudo && !isOwner) return;
-        if (plugin.ownerOnly && !isOwner) return;
+async function handleAssistantCommand(event: NewMessageEvent) {
+  const { Config } = await import("./config.js");
+  const { isSudo } = await import("./index.js");
+  
+  const message = event.message;
+  const sudo = isSudo(event);
+  const isOwner = event.message.senderId ? Config.OWNER_ID.includes(Number(event.message.senderId)) : false;
+  
+  if (!sudo && !isOwner) return;
 
-        const ASSISTANT_PREFIX = Config.SUDO_TRIGGER;
-        const text = message.text || "";
-        const commandStr = ASSISTANT_PREFIX + plugin.command;
-        
-        let isMatch = text === commandStr || text.startsWith(commandStr + " ") || text.startsWith(commandStr + "\n");
-        if (!isMatch && plugin.aliases) {
-            for (const alias of plugin.aliases) {
-                const aliasStr = ASSISTANT_PREFIX + alias;
-                if (text === aliasStr || text.startsWith(aliasStr + " ") || text.startsWith(aliasStr + "\n")) {
-                    isMatch = true;
-                    break;
-                }
+  const ASSISTANT_PREFIX = Config.SUDO_TRIGGER;
+  const text = message.text || "";
+  if (!text.startsWith(ASSISTANT_PREFIX)) return;
+
+  for (const plugin of plugins) {
+    if (plugin.ownerOnly && !isOwner) continue;
+
+    const commandStr = ASSISTANT_PREFIX + plugin.command;
+    let isMatch = text === commandStr || text.startsWith(commandStr + " ") || text.startsWith(commandStr + "\n");
+    
+    if (!isMatch && plugin.aliases) {
+        for (const alias of plugin.aliases) {
+            const aliasStr = ASSISTANT_PREFIX + alias;
+            if (text === aliasStr || text.startsWith(aliasStr + " ") || text.startsWith(aliasStr + "\n")) {
+                isMatch = true;
+                break;
             }
         }
-        
-        if (isMatch) {
-            const originalEdit = message.edit.bind(message);
-            message.edit = async (args: any) => {
-                return await message.reply({ message: args.text, ...args });
-            };
-            (event as any).isAssistantBot = true;
-            try {
-              await plugin.handler(event);
-            } catch (err) {
-              console.error(`Plugin ${plugin.name} error:`, err);
-              await event.message.reply({ message: `**Error in ${plugin.name}:** \`${String(err)}\`` });
-            }
-        }
-      }, new NewMessage({ incoming: true }));
     }
-  }).catch(() => {});
+    
+    if (isMatch) {
+        const originalEdit = message.edit.bind(message);
+        message.edit = async (args: any) => {
+            return await message.reply({ message: args.text, ...args });
+        };
+        (event as any).isAssistantBot = true;
+        try {
+          await plugin.handler(event);
+        } catch (err) {
+          console.error(`Plugin ${plugin.name} error:`, err);
+          await event.message.reply({ message: `**Error in ${plugin.name}:** \`${String(err)}\`` });
+        }
+        return; // Stop after executing one command
+    }
+  }
 }
 
 export async function loadDynamicPlugin(filePath: string) {

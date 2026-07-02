@@ -46,7 +46,7 @@ export default {
     name: "Purge",
     description: "Purge messages from user or between messages.",
     command: "purge",
-    category: "Admin",
+    usage: "Use .purge to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const parts = text.split(" ").slice(1);

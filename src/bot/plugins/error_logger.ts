@@ -52,7 +52,7 @@ export default [
         name: "Auto Error Logger Toggle",
         description: "Toggle automatic sending of error logs to the log channel",
         command: "autolog",
-        category: "System",
+    usage: "Use .autolog to execute this command.", category: "System",
         handler: async (event: NewMessageEvent) => {
             autoErrorLoggingEnabled = !autoErrorLoggingEnabled;
             const status = autoErrorLoggingEnabled ? "ENABLED 🟢" : "DISABLED 🔴";
@@ -65,7 +65,7 @@ export default [
         name: "Test Error Trigger",
         description: "Generate a mock error to test the auto error reporter",
         command: "testerror",
-        category: "System",
+    usage: "Use .testerror to execute this command.", category: "System",
         handler: async (event: NewMessageEvent) => {
             await event.message.edit({
                 text: `🧪 **Triggering a test error to verify logging...**`
@@ -77,7 +77,7 @@ export default [
         name: "View Error Logs",
         description: "Get the latest error logs from the log file",
         command: "errlogs",
-        category: "System",
+    usage: "Use .errlogs to execute this command.", category: "System",
         handler: async (event: NewMessageEvent) => {
             const logPath = path.join(process.cwd(), "logs", "rits.log");
             if (!fs.existsSync(logPath)) {

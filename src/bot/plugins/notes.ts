@@ -29,7 +29,7 @@ export default [
     name: "Save Note",
     description: "Save a note with a name.",
     command: "save",
-    category: "General",
+    usage: "Use .save to execute this command.", category: "General",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.save\s*/, "") || "";
@@ -59,7 +59,7 @@ export default [
     name: "Get Note",
     description: "Get a saved note.",
     command: "get",
-    category: "General",
+    usage: "Use .get to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
       const name = event.message.text?.replace(/^\.get\s*/, "")?.toLowerCase() || "";
       if (!name) {
@@ -78,7 +78,7 @@ export default [
     name: "Delete Note",
     description: "Delete a saved note.",
     command: "clear",
-    category: "General",
+    usage: "Use .clear to execute this command.", category: "General",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const name = event.message.text?.replace(/^\.clear\s*/, "")?.toLowerCase() || "";
@@ -100,7 +100,7 @@ export default [
     name: "List Notes",
     description: "List all saved notes.",
     command: "notes",
-    category: "General",
+    usage: "Use .notes to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
       const keys = Object.keys(notesData);
       if (keys.length === 0) {

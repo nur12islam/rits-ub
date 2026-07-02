@@ -78,7 +78,7 @@ export default [
     name: "AFK",
     description: "Set your status to Away From Keyboard.",
     command: "afk",
-    category: "General",
+    usage: "Use .afk to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const reason = text.split(" ").slice(1).join(" ") || "";

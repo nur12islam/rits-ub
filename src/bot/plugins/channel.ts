@@ -6,7 +6,7 @@ export default [
     name: "Join Chat",
     description: "Join a channel or group via link.",
     command: "join",
-    category: "Admin",
+    usage: "Use .join to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
@@ -33,7 +33,7 @@ export default [
     name: "Leave Chat",
     description: "Leave the current channel or group.",
     command: "leave",
-    category: "Admin",
+    usage: "Use .leave to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       try {
@@ -47,7 +47,7 @@ export default [
     name: "Add Bot / User",
     description: "Add a bot or user to the current group/channel.",
     command: "addbot",
-    category: "Admin",
+    usage: "Use .addbot to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";

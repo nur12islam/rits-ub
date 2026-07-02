@@ -21,7 +21,7 @@ export const ytinfoPlugin = {
     name: "YT Info",
     description: "Get information of the link without downloading",
     command: "ytinfo",
-    category: "Media",
+    usage: "Use .ytinfo to execute this command.", category: "Media",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const parts = text.split(" ").slice(1);
@@ -83,7 +83,7 @@ export const ytdesPlugin = {
     name: "YT Description",
     description: "Get description of the link without downloading",
     command: "ytdes",
-    category: "Media",
+    usage: "Use .ytdes to execute this command.", category: "Media",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const parts = text.split(" ").slice(1);
@@ -126,7 +126,7 @@ export const ytdlPlugin = {
     name: "YT Download",
     description: "Download from youtube",
     command: "ytdl",
-    category: "Media",
+    usage: "Use .ytdl to execute this command.", category: "Media",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text || "";
         const parts = text.split(" ").slice(1);

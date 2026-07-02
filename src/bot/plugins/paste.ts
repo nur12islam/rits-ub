@@ -56,7 +56,7 @@ export const pastePlugin = {
     name: "Paste",
     description: "Pastes text or text_file to a bin service",
     command: "paste",
-    category: "Tools",
+    usage: "Use .paste to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
         await event.message.edit({ text: "`Processing...`" });
         
@@ -112,7 +112,7 @@ export const getPastePlugin = {
     name: "Get Paste",
     description: "Gets the content of a paste url",
     command: "getpaste",
-    category: "Tools",
+    usage: "Use .getpaste to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
         const link = event.message.text?.split(" ")[1];
         

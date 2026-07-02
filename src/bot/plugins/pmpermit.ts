@@ -94,7 +94,7 @@ export default [
     name: "Allow PM",
     description: "Allows someone to contact.",
     command: "allow",
-    aliases: ["a", "approve"],
+    usage: "Use .allow to execute this command.", aliases: ["a", "approve"],
     category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
@@ -120,7 +120,7 @@ export default [
     name: "Disallow PM",
     description: "Activates guarding on inbox for user.",
     command: "nopm",
-    aliases: ["da", "disapprove", "deny"],
+    usage: "Use .nopm to execute this command.", aliases: ["da", "disapprove", "deny"],
     category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
@@ -149,7 +149,7 @@ export default [
     name: "List Allowed PMs",
     description: "List all Allowed PM's.",
     command: "listpm",
-    category: "PMPermit",
+    usage: "Use .listpm to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       if (pmPermitData.approved.length === 0) {
@@ -167,7 +167,7 @@ export default [
     name: "PM Guard",
     description: "Switchs the pm permiting module on/off.",
     command: "pmguard",
-    category: "PMPermit",
+    usage: "Use .pmguard to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       pmPermitData.pmguard = !pmPermitData.pmguard;
@@ -184,7 +184,7 @@ export default [
     name: "Set PM Message",
     description: "Sets the reply message for un-invited PMs.",
     command: "setpmmsg",
-    category: "PMPermit",
+    usage: "Use .setpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
@@ -208,7 +208,7 @@ export default [
     name: "Set Block Message",
     description: "Sets the block message for spamming PMs.",
     command: "setbpmmsg",
-    category: "PMPermit",
+    usage: "Use .setbpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
@@ -232,7 +232,7 @@ export default [
     name: "Set PM Limit",
     description: "Sets the maximum number of warnings before blocking.",
     command: "setpmlimit",
-    category: "PMPermit",
+    usage: "Use .setpmlimit to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
@@ -251,7 +251,7 @@ export default [
     name: "View PM Message",
     description: "Displays the reply message for uninvited PMs.",
     command: "vpmmsg",
-    category: "PMPermit",
+    usage: "Use .vpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       await event.message.edit({ text: `--current PM message--\n\n${pmPermitData.customMsg}` });
@@ -261,7 +261,7 @@ export default [
     name: "View Block Message",
     description: "Displays the reply message for blocked PMs.",
     command: "vbpmmsg",
-    category: "PMPermit",
+    usage: "Use .vbpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       await event.message.edit({ text: `--current blockPM message--\n\n${pmPermitData.customBlockMsg}` });

@@ -105,6 +105,7 @@ export const COMMAND_MAP: any = {
         commands: [
           "afk",
           "alive",
+          "setalive",
           "ping"
         ]
       }
@@ -116,7 +117,8 @@ export const COMMAND_MAP: any = {
     commands: [
       "help",
       "id",
-      "sysinfo"
+      "sysinfo",
+      "sg"
     ]
   },
 
@@ -167,7 +169,9 @@ export const COMMAND_MAP: any = {
           "calc",
           "crypto",
           "short",
-          "ocr"
+          "ocr",
+          "paste",
+          "getpaste"
         ]
       },
       media: {

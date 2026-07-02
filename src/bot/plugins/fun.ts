@@ -5,7 +5,7 @@ export default [
     name: "Mock",
     description: "mOcK yOuR tExT",
     command: "mock",
-    category: "Fun",
+    usage: "Use .mock to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
       let text = event.message.text?.replace(/^\.mock\s*/, "") || "";
       if (!text && event.message.replyTo) {
@@ -21,7 +21,7 @@ export default [
     name: "Vaporwave",
     description: "ｖａｐｏｒｗａｖｅ",
     command: "vapor",
-    category: "Fun",
+    usage: "Use .vapor to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
       let text = event.message.text?.replace(/^\.vapor\s*/, "") || "";
       if (!text) return;
@@ -36,7 +36,7 @@ export default [
     name: "Clap",
     description: "Clap words",
     command: "clap",
-    category: "Fun",
+    usage: "Use .clap to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
         let text = event.message.text?.replace(/^\.clap\s*/, "") || "";
         if (!text) return;
@@ -47,7 +47,7 @@ export default [
     name: "Shrug",
     description: "¯\\_(ツ)_/¯",
     command: "shrug",
-    category: "Fun",
+    usage: "Use .shrug to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
         const text = event.message.text?.replace(/^\.shrug\s*/, "") || "";
         await event.message.edit({ text: `${text} ¯\\_(ツ)_/¯` });
@@ -57,7 +57,7 @@ export default [
     name: "Slap",
     description: "Slaps a user",
     command: "slap",
-    category: "Fun",
+    usage: "Use .slap to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
         const items = ["a large trout", "a frying pan", "a rubber chicken", "a wet noodle", "an old boot"];
         const item = items[Math.floor(Math.random() * items.length)];
@@ -73,7 +73,7 @@ export default [
     name: "Reverse",
     description: "Reverses the text",
     command: "rev",
-    category: "Fun",
+    usage: "Use .rev to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
         let text = event.message.text?.replace(/^\.rev\s*/, "") || "";
         if (!text) {

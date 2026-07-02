@@ -6,7 +6,7 @@ export default [
     name: "Calculate",
     description: "Evaluate a math expression",
     command: "calc",
-    category: "Tools",
+    usage: "Use .calc to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
       const expr = event.message.text?.replace(/^\.calc\s*/, "");
       if (!expr) return;
@@ -26,7 +26,7 @@ export default [
     name: "Crypto Price",
     description: "Get crypto price",
     command: "crypto",
-    category: "Tools",
+    usage: "Use .crypto to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
       const coin = event.message.text?.replace(/^\.crypto\s*/, "").toUpperCase() || "BTC";
       try {
@@ -45,7 +45,7 @@ export default [
     name: "URL Shortener",
     description: "Shorten a URL using TinyURL",
     command: "short",
-    category: "Tools",
+    usage: "Use .short to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
         let url = event.message.text?.replace(/^\.short\s*/, "");
         if (!url) {

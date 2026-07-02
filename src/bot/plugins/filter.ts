@@ -30,7 +30,7 @@ export default [
     name: "Add Filter",
     description: "Add an automated reply filter to the current chat.",
     command: "filter",
-    category: "Admin",
+    usage: "Use .filter to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const chatId = event.chatId?.toString();
@@ -61,7 +61,7 @@ export default [
     name: "Stop Filter",
     description: "Remove a filter from the current chat.",
     command: "stop",
-    category: "Admin",
+    usage: "Use .stop to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const chatId = event.chatId?.toString();
@@ -90,7 +90,7 @@ export default [
     name: "List Filters",
     description: "List all active filters in the current chat.",
     command: "filters",
-    category: "Admin",
+    usage: "Use .filters to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
       const chatId = event.chatId?.toString();
       if (!chatId || !filtersData[chatId] || Object.keys(filtersData[chatId]).length === 0) {

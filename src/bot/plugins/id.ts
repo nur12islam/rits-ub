@@ -4,7 +4,7 @@ export default {
   name: "ID",
   description: "Get the ID of the current chat, replied user, or yourself.",
   command: "id",
-    category: "General",
+    usage: "Use .id to execute this command.", category: "General",
   handler: async (event: NewMessageEvent) => {
     let text = `**Chat ID:** \`${event.chatId}\``;
 

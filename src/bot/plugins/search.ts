@@ -6,7 +6,7 @@ export default [
     name: "Google Search",
     description: "Search Google",
     command: "google",
-    category: "Search",
+    usage: "Use .google to execute this command.", category: "Search",
     handler: async (event: NewMessageEvent) => {
       const query = event.message.text?.replace(/^\.google\s*/, "");
       if (!query) {
@@ -22,7 +22,7 @@ export default [
     name: "GitHub",
     description: "Get GitHub User Info",
     command: "github",
-    category: "Search",
+    usage: "Use .github to execute this command.", category: "Search",
     handler: async (event: NewMessageEvent) => {
       const user = event.message.text?.replace(/^\.github\s*/, "");
       if (!user) return;
@@ -40,7 +40,7 @@ export default [
     name: "Wikipedia",
     description: "Search Wikipedia",
     command: "wiki",
-    category: "Search",
+    usage: "Use .wiki to execute this command.", category: "Search",
     handler: async (event: NewMessageEvent) => {
       const query = event.message.text?.replace(/^\.wiki\s*/, "");
       if (!query) return;

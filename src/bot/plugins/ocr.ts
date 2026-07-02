@@ -8,7 +8,7 @@ export default [
     name: "OCR Reader",
     description: "Get OCR result for images (file size limit = 1MB)",
     command: "ocr",
-    category: "Tools",
+    usage: "Use .ocr to execute this command.", category: "Tools",
     handler: async (event: NewMessageEvent) => {
       const apiKey = process.env.OCR_SPACE_API_KEY;
       if (!apiKey) {

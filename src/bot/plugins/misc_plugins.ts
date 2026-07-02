@@ -7,7 +7,7 @@ export default [
         name: "Weather",
         description: "Get weather for a city",
         command: "weather",
-    category: "Tools",
+    usage: "Use .weather to execute this command.", category: "Tools",
         handler: async (event: NewMessageEvent) => {
             const city = event.message.text?.replace(/^\.weather\s*/, "") || "";
             if (!city) {
@@ -26,7 +26,7 @@ export default [
         name: "Quote",
         description: "Get a random quote",
         command: "quote",
-    category: "Fun",
+    usage: "Use .quote to execute this command.", category: "Fun",
         handler: async (event: NewMessageEvent) => {
             try {
                 const res = await axios.get("https://api.quotable.io/random");
@@ -40,7 +40,7 @@ export default [
         name: "Meme",
         description: "Get a random meme",
         command: "meme",
-    category: "Fun",
+    usage: "Use .meme to execute this command.", category: "Fun",
         handler: async (event: NewMessageEvent) => {
             try {
                 const res = await axios.get("https://meme-api.com/gimme");
@@ -55,7 +55,7 @@ export default [
         name: "Dog",
         description: "Get a random dog picture",
         command: "dog",
-    category: "Fun",
+    usage: "Use .dog to execute this command.", category: "Fun",
         handler: async (event: NewMessageEvent) => {
             try {
                 const res = await axios.get("https://dog.ceo/api/breeds/image/random");
@@ -70,7 +70,7 @@ export default [
         name: "Cat",
         description: "Get a random cat picture",
         command: "cat",
-    category: "Fun",
+    usage: "Use .cat to execute this command.", category: "Fun",
         handler: async (event: NewMessageEvent) => {
             try {
                 const res = await axios.get("https://api.thecatapi.com/v1/images/search");
@@ -85,7 +85,7 @@ export default [
         name: "Joke",
         description: "Get a random joke",
         command: "joke",
-    category: "Fun",
+    usage: "Use .joke to execute this command.", category: "Fun",
         handler: async (event: NewMessageEvent) => {
             try {
                 const res = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
@@ -98,9 +98,9 @@ export default [
     },
     {
         name: "Hash",
-        description: "Hash text (md5, sha1, sha256)",
+        description: "Hash text (md5, sha1, sha256).",
         command: "hash",
-    category: "Tools",
+    usage: "Use .hash to execute this command.", category: "Tools",
         handler: async (event: NewMessageEvent) => {
             const text = event.message.text?.replace(/^\.hash\s*/, "") || "";
             if (!text) {
@@ -117,7 +117,7 @@ export default [
         name: "UUID",
         description: "Generate a UUID",
         command: "uuid",
-    category: "Tools",
+    usage: "Use .uuid to execute this command.", category: "Tools",
         handler: async (event: NewMessageEvent) => {
             await event.message.edit({ text: `**UUID:** \`${crypto.randomUUID()}\`` });
         }
@@ -126,7 +126,7 @@ export default [
         name: "IP Info",
         description: "Get information about an IP address",
         command: "ip",
-    category: "Tools",
+    usage: "Use .ip to execute this command.", category: "Tools",
         handler: async (event: NewMessageEvent) => {
             const ip = event.message.text?.replace(/^\.ip\s*/, "") || "";
             if (!ip) {
@@ -150,7 +150,7 @@ export default [
         name: "Dictionary",
         description: "Define a word",
         command: "dict",
-    category: "Search",
+    usage: "Use .dict to execute this command.", category: "Search",
         handler: async (event: NewMessageEvent) => {
             const word = event.message.text?.replace(/^\.dict\s*/, "") || "";
             if (!word) return;
@@ -168,7 +168,7 @@ export default [
         name: "Urban Dictionary",
         description: "Define a word on Urban Dictionary",
         command: "ud",
-    category: "Search",
+    usage: "Use .ud to execute this command.", category: "Search",
         handler: async (event: NewMessageEvent) => {
             const word = event.message.text?.replace(/^\.ud\s*/, "") || "";
             if (!word) return;

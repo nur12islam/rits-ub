@@ -6,7 +6,7 @@ export default [
     name: "Set Name",
     description: "Change your account's first and last name.",
     command: "setname",
-    category: "Admin",
+    usage: "Use .setname to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.setname\s*/, "") || "";
@@ -33,7 +33,7 @@ export default [
     name: "Set Bio",
     description: "Change your account's bio.",
     command: "setbio",
-    category: "Admin",
+    usage: "Use .setbio to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.setbio\s*/, "") || "";
@@ -56,7 +56,7 @@ export default [
     name: "Block",
     description: "Block a user.",
     command: "block",
-    category: "Admin",
+    usage: "Use .block to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();
@@ -84,7 +84,7 @@ export default [
     name: "Unblock",
     description: "Unblock a user.",
     command: "unblock",
-    category: "Admin",
+    usage: "Use .unblock to execute this command.", category: "Admin",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const reply = await event.message.getReplyMessage();

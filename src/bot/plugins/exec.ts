@@ -8,7 +8,7 @@ export default [
     name: "Exec",
     description: "Run shell commands.",
     command: "exec",
-    category: "Developer",
+    usage: "Use .exec to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.exec\s*/, "") || "";
@@ -37,7 +37,7 @@ export default [
     name: "Term",
     description: "Run commands in shell (terminal).",
     command: "term",
-    category: "Developer",
+    usage: "Use .term to execute this command.", category: "Developer",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.term\s*/, "") || "";

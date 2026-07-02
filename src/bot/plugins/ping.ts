@@ -3,7 +3,7 @@ export default [{
     name: "Ping",
     description: "Check bot latency (Rewritten)",
     command: "ping",
-    category: "General",
+    usage: "Use .ping to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
         const start = Date.now();
         await event.message.edit({ text: "`Pinging...`" });

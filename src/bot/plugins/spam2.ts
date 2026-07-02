@@ -6,7 +6,7 @@ export default [
     name: "Spam",
     description: "Spam a message X times. Re-written with new logic.",
     command: "spam",
-    category: "Fun",
+    usage: "Use .spam to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.spam\s*/, "") || "";
       const args = text.split(" ");
@@ -35,7 +35,7 @@ export default [
     name: "Delay Spam",
     description: "Spam with a delay.",
     command: "dspam",
-    category: "Fun",
+    usage: "Use .dspam to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.dspam\s*/, "") || "";
       const args = text.split(" ");
@@ -60,7 +60,7 @@ export default [
     name: "Tag All",
     description: "Tags all members in a group.",
     command: "tagall",
-    category: "Fun",
+    usage: "Use .tagall to execute this command.", category: "Fun",
     handler: async (event: NewMessageEvent) => {
       const customMsg = event.message.text?.replace(/^\.tagall\s*/, "") || "Wake up!";
       await event.message.edit({ text: "`Fetching members...`" });

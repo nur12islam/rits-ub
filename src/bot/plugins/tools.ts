@@ -5,7 +5,7 @@ export default [
     name: "Base64 Encode",
     description: "Encode text to Base64.",
     command: "b64en",
-    category: "Misc",
+    usage: "Use .b64en to execute this command.", category: "Misc",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.b64en\s*/, "") || "";
       if (!text) {
@@ -20,7 +20,7 @@ export default [
     name: "Base64 Decode",
     description: "Decode Base64 to text.",
     command: "b64de",
-    category: "Misc",
+    usage: "Use .b64de to execute this command.", category: "Misc",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.b64de\s*/, "") || "";
       if (!text) {
@@ -35,7 +35,7 @@ export default [
     name: "Spam",
     description: "Spam a message multiple times.",
     command: "spam",
-    category: "Misc",
+    usage: "Use .spam to execute this command.", category: "Misc",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.spam\s*/, "") || "";
@@ -64,7 +64,7 @@ export default [
     name: "Echo",
     description: "Echo the provided text.",
     command: "echo",
-    category: "Misc",
+    usage: "Use .echo to execute this command.", category: "Misc",
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text?.replace(/^\.echo\s*/, "") || "";
       if (!text) {

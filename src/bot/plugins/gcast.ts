@@ -4,7 +4,7 @@ export default {
   name: "Global Cast",
   description: "Broadcast a message to all groups and channels you are in.",
   command: "gcast",
-    category: "Admin",
+    usage: "Use .gcast to execute this command.", category: "Admin",
   ownerOnly: true,
   handler: async (event: NewMessageEvent) => {
     const text = event.message.text?.replace(/^\.gcast\s*/, "") || "";

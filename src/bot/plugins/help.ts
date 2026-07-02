@@ -7,7 +7,7 @@ export default {
   name: "Help",
   description: "List all available RITS commands.",
   command: "help",
-  category: "General",
+    usage: "Use .help to execute this command.", category: "General",
   handler: async (event: NewMessageEvent) => {
     // If assistantBot is available, use inline query results to show buttons
     if (assistantBot) {
@@ -120,7 +120,7 @@ export default {
         const plugins = getLoadedPlugins();
         const cmd = plugins.find(p => p.command === query);
         if (cmd) {
-           const helpText = `🗃 Plugin Status 🗃\n\n🔖 Plugin : ${cmd.name}\n📝 Use : ${cmd.description}\n⚔ Command: ${COMMAND_PREFIX}${cmd.command}\n✅ Loaded : True`;
+           const helpText = `🗃 Plugin Status 🗃\n\n🔖 Plugin : ${cmd.name}\n📝 Use : ${cmd.usage || cmd.description}\n⚔ Command: ${COMMAND_PREFIX}${cmd.command}\n✅ Loaded : True`;
            await event.message.edit({ text: helpText });
         } else {
            await event.message.edit({ text: `\`Category or command '${query}' not found.\`` });

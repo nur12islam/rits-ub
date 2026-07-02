@@ -13,7 +13,7 @@ export default {
   name: "System Info",
   description: "Display host server information.",
   command: "sysinfo",
-    category: "General",
+    usage: "Use .sysinfo to execute this command.", category: "General",
   handler: async (event: NewMessageEvent) => {
     const uptime = process.uptime();
     const days = Math.floor(uptime / 86400);

@@ -5,7 +5,7 @@ export default {
   name: "Eval",
   description: "Evaluate arbitrary JavaScript code.",
   command: "eval",
-    category: "Developer",
+    usage: "Use .eval to execute this command.", category: "Developer",
   ownerOnly: true,
   handler: async (event: NewMessageEvent) => {
     const message = event.message.text || "";

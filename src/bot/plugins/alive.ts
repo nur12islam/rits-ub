@@ -28,7 +28,7 @@ export const alivePlugin = {
     name: "Alive",
     description: "Check if bot is alive (Rewritten)",
     command: "alive",
-    category: "General",
+    usage: "Use .alive to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
         const uptime = process.uptime();
         const hrs = Math.floor(uptime / 3600);
@@ -50,7 +50,7 @@ export const setAlivePlugin = {
     name: "Set Alive",
     description: "Set the alive media by replying to an image/video/gif",
     command: "setalive",
-    category: "General",
+    usage: "Use .setalive to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
         if (!event.message.replyToMsgId) {
             await event.message.edit({ text: "`Reply to a media (image/gif/video) to set it as alive media.`" });
