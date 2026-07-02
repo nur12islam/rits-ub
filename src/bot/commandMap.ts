@@ -179,7 +179,8 @@ export const COMMAND_MAP: any = {
         commands: [
           "ytinfo",
           "ytdes",
-          "ytdl"
+          "ytdl",
+          "rmbg"
         ]
       }
     }
@@ -247,7 +248,10 @@ export const COMMAND_MAP: any = {
         commands: [
           "logs",
           "json",
-          "status"
+          "status",
+          "autolog",
+          "errlogs",
+          "testerror"
         ]
       },
       system: {
