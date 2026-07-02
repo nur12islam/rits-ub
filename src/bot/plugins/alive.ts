@@ -11,6 +11,12 @@ export default [{
         const secs = Math.floor(uptime % 60);
         const uptimeStr = `${hrs}h ${mins}m ${secs}s`;
         
-        await event.message.edit({ text: `🌟 **RITS is Alive!**\n\n⚡ **Uptime:** ${uptimeStr}\n🚀 **Version:** 2.0 (Rewritten)\n💻 **System:** Custom TS Engine` });
+        const aliveMsg = `🌟 **RITS is Alive!**\n\n⚡ **Uptime:** ${uptimeStr}\n🚀 **Version:** 2.0 (Rewritten)\n💻 **System:** Custom TS Engine`;
+        
+        await event.client?.sendMessage(event.message.chatId!, {
+            file: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?q=80&w=1000&auto=format&fit=crop",
+            message: aliveMsg,
+        });
+        await event.message.delete();
     }
 }];

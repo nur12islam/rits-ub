@@ -35,7 +35,7 @@ export default {
                 await event.message.edit({ text: "`Running speed test . . .`" });
             }
 
-            const { stdout, stderr } = await execPromise(`python3 ${scriptPath} --json`);
+            const { stdout, stderr } = await execPromise(`python3 ${scriptPath} --share --json`);
             
             if (stderr && !stdout) {
                 throw new Error(stderr);
