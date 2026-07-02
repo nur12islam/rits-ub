@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RITS Userbot Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+        .section-nav a { transition: color 0.2s; }
+        .section-nav a:hover { color: #34d399; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+    
+    <nav class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-md bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 font-bold">R</div>
+                    <span class="font-bold text-lg tracking-tight">RITS Userbot Docs</span>
+                </div>
+                <div class="flex space-x-6 section-nav text-sm font-medium text-slate-400">
+                    <a href="#commands">Commands</a>
+                    <a href="#plugins">Plugins</a>
+                    <a href="#deploy">Deployment</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
+        
+        <!-- Part 1: Commands & Usage -->
+        <section id="commands" class="scroll-mt-24 space-y-8">
+            <div class="space-y-4 border-b border-slate-800 pb-6">
+                <h1 class="text-3xl font-bold tracking-tight text-white">Commands & Usage</h1>
+                <p class="text-slate-400 text-lg leading-relaxed">
+                    Learn how to use all the powerful features of RITS Userbot. All commands are triggered by the configured prefix (default is <code>!</code> or <code>.</code>).
+                </p>
+            </div>
+
+            <!-- Categories -->
+            <div class="grid gap-8">
+                <!-- Administration -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 bg-slate-800/50 border-b border-slate-800">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">🛡️ Administration</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div>
+                            <h3 class="text-emerald-400 font-medium mb-3">👤 User Management</h3>
+                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!ban [reply/id]</code> - Ban a user from the chat</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!unban [reply/id]</code> - Unban a user</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!mute [reply/id]</code> - Mute a user</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!unmute [reply/id]</code> - Unmute a user</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!kick [reply/id]</code> - Kick a user</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!promote [reply/id]</code> - Promote a user to admin</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!demote [reply/id]</code> - Demote an admin</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!block [reply/id]</code> - Block a user (PM)</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-emerald-400 font-medium mb-3">💬 Chat Management</h3>
+                            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!pin [reply]</code> - Pin a message</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!gpic [reply to image]</code> - Change group picture</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!purge [reply]</code> - Delete messages from replied</div>
+                                <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!tagall [text]</code> - Tag all members in chat</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Utilities -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 bg-slate-800/50 border-b border-slate-800">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">🛠️ Utilities & Media</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!ytdl [url]</code> - Download YouTube video/audio</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!ytinfo [url]</code> - Get YouTube video info</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!ocr [reply to image]</code> - Extract text from image</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!weather [city]</code> - Get current weather</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!calc [expression]</code> - Calculate math expression</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!speedtest</code> - Run server speedtest</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Developer -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 bg-slate-800/50 border-b border-slate-800">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">👨‍💻 Developer & System</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!eval [code]</code> - Execute TS/JS code</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!exec [command]</code> - Execute shell command</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!install [reply to .ts]</code> - Install a new plugin</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!logs</code> - Get bot error logs</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!restart</code> - Restart the bot process</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!setvar [key] [val]</code> - Set environment variable</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PM Permit -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 bg-slate-800/50 border-b border-slate-800">
+                        <h2 class="text-xl font-semibold flex items-center gap-2">📩 PM Permit (Security)</h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <p class="text-sm text-slate-400">PM Permit automatically blocks unwanted direct messages from strangers unless they are approved by you.</p>
+                        <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!pmguard [on/off]</code> - Enable/Disable PM Permit</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!allow [reply/id]</code> - Approve a user to PM you</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!nopm [reply/id]</code> - Disallow a user</div>
+                            <div class="bg-slate-950 p-3 rounded border border-slate-800"><code class="text-emerald-400">!setpmmsg [text]</code> - Set custom warning message</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Part 2: Plugins & Deployment -->
+        <section id="plugins" class="scroll-mt-24 space-y-8">
+            <div class="space-y-4 border-b border-slate-800 pb-6">
+                <h1 class="text-3xl font-bold tracking-tight text-white">Plugin Development</h1>
+                <p class="text-slate-400 text-lg leading-relaxed">
+                    RITS Userbot is highly extensible. You can write your own plugins and load them dynamically.
+                </p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-6 space-y-6">
+                <h3 class="text-xl font-semibold">How to add a new plugin</h3>
+                
+                <div class="space-y-4">
+                    <h4 class="font-medium text-emerald-400">Method 1: Using the <code>!install</code> command</h4>
+                    <p class="text-sm text-slate-300">
+                        Simply write your plugin in a <code>.ts</code> or <code>.js</code> file, send it in any chat, reply to the file and type <code>!install</code>. The bot will automatically save it and reload without restarting!
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="font-medium text-emerald-400">Method 2: Adding directly to GitHub (Source Code)</h4>
+                    <p class="text-sm text-slate-300">
+                        1. Navigate to <code>src/bot/plugins/</code> in your repository.<br>
+                        2. Create a new file (e.g. <code>myplugin.ts</code>).<br>
+                        3. Add your code using the standard plugin structure (see below).<br>
+                        4. <b>Important:</b> Open <code>src/bot/pluginManager.ts</code> and add your new plugin to the static import list at the top to ensure it gets bundled by Vite during deployment!
+                    </p>
+                </div>
+
+                <div class="bg-slate-950 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 border border-slate-800">
+<pre><code class="text-emerald-400">import</code> { NewMessageEvent } <code class="text-emerald-400">from</code> <code class="text-yellow-300">"telegram/events/index.js"</code>;
+
+<code class="text-emerald-400">export default</code> [{
+    name: <code class="text-yellow-300">"MyPlugin"</code>,
+    description: <code class="text-yellow-300">"My custom plugin"</code>,
+    command: <code class="text-yellow-300">"mycmd"</code>,
+    category: <code class="text-yellow-300">"Custom"</code>,
+    handler: <code class="text-emerald-400">async</code> (event: NewMessageEvent) => {
+        <code class="text-emerald-400">await</code> event.message.edit({ text: <code class="text-yellow-300">"Hello World!"</code> });
+    }
+}];</pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="deploy" class="scroll-mt-24 space-y-8">
+            <div class="space-y-4 border-b border-slate-800 pb-6">
+                <h1 class="text-3xl font-bold tracking-tight text-white">Deployment Guide</h1>
+                <p class="text-slate-400 text-lg leading-relaxed">
+                    Deploy RITS Userbot easily on popular free platforms like Render.
+                </p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-6 space-y-6">
+                
+                <h3 class="text-xl font-semibold">Deploying on Render.com</h3>
+                <ol class="list-decimal list-inside space-y-4 text-sm text-slate-300">
+                    <li>Push your code to a new <b>GitHub Repository</b>.</li>
+                    <li>Go to <a href="https://render.com" class="text-emerald-400 hover:underline" target="_blank">Render</a> and create a new account if you don't have one.</li>
+                    <li>Click <b>New</b> > <b>Web Service</b>.</li>
+                    <li>Connect your GitHub account and select your userbot repository.</li>
+                    <li>Fill in the deployment details:
+                        <ul class="list-disc list-inside ml-6 mt-2 space-y-1 text-slate-400">
+                            <li><b>Name:</b> rits-userbot</li>
+                            <li><b>Region:</b> Singapore (Asia) - <i>Crucial for better latency</i></li>
+                            <li><b>Environment:</b> Node</li>
+                            <li><b>Build Command:</b> <code>npm install && npm run build</code></li>
+                            <li><b>Start Command:</b> <code>npm start</code></li>
+                        </ul>
+                    </li>
+                    <li class="pt-2"><b>Environment Variables:</b> Scroll down to "Environment Variables" and click "Add Environment Variable". Add the following:
+                        <ul class="list-disc list-inside ml-6 mt-2 space-y-1 text-slate-400 font-mono text-xs">
+                            <li>API_ID: <span class="text-slate-500">(Get from my.telegram.org)</span></li>
+                            <li>API_HASH: <span class="text-slate-500">(Get from my.telegram.org)</span></li>
+                            <li>SESSION: <span class="text-slate-500">(Paste your generated Session String here)</span></li>
+                            <li>BOT_TOKEN: <span class="text-slate-500">(Optional: from @BotFather for Assistant Bot)</span></li>
+                        </ul>
+                    </li>
+                    <li class="pt-2">Click <b>Create Web Service</b>. Your bot will deploy and be active within a few minutes!</li>
+                </ol>
+
+                <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <h4 class="text-yellow-500 font-medium flex items-center gap-2 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                        Important Note about Render Free Tier
+                    </h4>
+                    <p class="text-xs text-yellow-500/80">
+                        Render free instances spin down after 15 minutes of inactivity. Since Web Services require incoming HTTP requests to stay awake, and Telegram MTProto doesn't send HTTP pings to your server, you need to use a free pinging service (like <a href="https://uptimerobot.com" target="_blank" class="underline">UptimeRobot</a>) pointing to your web service URL to keep it running 24/7. When setting up UptimeRobot, try to select an <b>Asia</b> region for the monitoring node to reduce latency.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 py-8 mt-12 text-center text-sm text-slate-500">
+        <p>RITS Userbot &copy; 2026</p>
+    </footer>
+
+</body>
+</html>
