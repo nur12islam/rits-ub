@@ -171,7 +171,8 @@ export const COMMAND_MAP: any = {
           "short",
           "ocr",
           "paste",
-          "getpaste"
+          "getpaste",
+          "cbutton"
         ]
       },
       media: {

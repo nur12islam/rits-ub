@@ -61,6 +61,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/paste.js"),
     await import("./plugins/sangmata.js"),
     await import("./plugins/rmbg.js"),
+    await import("./plugins/cbutton.js"),
   ];
 
   for (const mod of modules) {
