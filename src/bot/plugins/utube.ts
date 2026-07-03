@@ -9,10 +9,10 @@ const execPromise = util.promisify(exec);
 
 async function ensureYtDlp(): Promise<string> {
     const binDir = path.join(process.cwd(), "bin");
-    const ytdlpPath = path.join(binDir, "youtube-dl");
+    const ytdlpPath = path.join(binDir, "yt-dlp");
     if (!fs.existsSync(ytdlpPath)) {
         fs.mkdirSync(binDir, { recursive: true });
-        await execPromise(`curl -sLo ${ytdlpPath} https://github.com/ytdl-org/youtube-dl/releases/latest/download/youtube-dl && chmod +x ${ytdlpPath}`);
+        await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod +x ${ytdlpPath}`);
     }
     return ytdlpPath;
 }
@@ -41,7 +41,7 @@ export const ytinfoPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            const { stdout } = await execPromise(`${ytDlp} -j --no-playlist "${link}"`);
+            const { stdout } = await execPromise(`${ytDlp} --js-runtimes nodejs -j --no-playlist "${link}"`);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
@@ -103,7 +103,7 @@ export const ytdesPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            const { stdout } = await execPromise(`${ytDlp} -j --no-playlist "${link}"`);
+            const { stdout } = await execPromise(`${ytDlp} --js-runtimes nodejs -j --no-playlist "${link}"`);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
@@ -176,6 +176,7 @@ export const ytdlPlugin = {
         }
         
         const args = [
+            "--js-runtimes", "nodejs",
             "--no-playlist",
             "-f", formatOpt,
             "-o", path.join(downDir, "%(title)s-%(format)s.%(ext)s")
