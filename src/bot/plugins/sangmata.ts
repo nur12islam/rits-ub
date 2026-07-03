@@ -24,8 +24,8 @@ export const sangmataPlugin = {
         const userId = reply.senderId.toString();
         await event.message.edit({ text: "`Getting info, Wait plox ...`" });
 
-        const chat = "@SangMataInfo_bot";
-        const ERROR_MSG = "For your kind information, you blocked @SangMataInfo_bot, Unblock it";
+        const chat = "@SangMata_beta_bot";
+        const ERROR_MSG = "For your kind information, you blocked @SangMata_beta_bot, Unblock it";
 
         try {
             await event.client?.sendMessage(chat, { message: `/search_id ${userId}` });
@@ -53,7 +53,7 @@ export const sangmataPlugin = {
         }
 
         if (msgs.length === 0) {
-            await event.message.edit({ text: "`No response from @SangMataInfo_bot. Please try again later.`" });
+            await event.message.edit({ text: "`No response from @SangMata_beta_bot. Please try again later.`" });
             return;
         }
 
