@@ -1,29 +1,10 @@
 import { NewMessageEvent } from "telegram/events/index.js";
-import fs from "fs";
+import { Filter } from "../db/models/Filter.js";
 
-const FILTERS_FILE = "filters.json";
-// chat_id -> { trigger: reply }
-let filtersData: Record<string, Record<string, string>> = {};
-
-function loadFilters() {
-  try {
-    if (fs.existsSync(FILTERS_FILE)) {
-      filtersData = JSON.parse(fs.readFileSync(FILTERS_FILE, "utf8"));
-    }
-  } catch (e) {
-    console.error("Failed to load filters.json");
-  }
+async function getChatFilters(chatId: string) {
+    const filterDoc = await Filter.findOne({ chatId });
+    return filterDoc ? (filterDoc.get('filters') || filterDoc.filters) : null;
 }
-
-function saveFilters() {
-  try {
-    fs.writeFileSync(FILTERS_FILE, JSON.stringify(filtersData));
-  } catch (e) {
-    console.error("Failed to save filters.json");
-  }
-}
-
-loadFilters();
 
 export default [
   {
@@ -47,12 +28,19 @@ export default [
       const trigger = args[1].toLowerCase();
       const reply = args.slice(2).join(" ");
       
-      if (!filtersData[chatId]) {
-        filtersData[chatId] = {};
+      let filterDoc = await Filter.findOne({ chatId });
+      if (!filterDoc) {
+          filterDoc = new Filter({ chatId, filters: new Map() });
       }
       
-      filtersData[chatId][trigger] = reply;
-      saveFilters();
+      const filtersMap = filterDoc.get('filters') || filterDoc.filters;
+      if (filtersMap.set) {
+          filtersMap.set(trigger, reply);
+      } else {
+          filtersMap[trigger] = reply;
+      }
+      
+      await filterDoc.save();
       
       await event.message.edit({ text: `\`Added filter for '\`${trigger}\`' in this chat.\`` });
     }
@@ -76,14 +64,27 @@ export default [
       }
       
       const trigger = args[1].toLowerCase();
+      const filterDoc = await Filter.findOne({ chatId });
       
-      if (filtersData[chatId] && filtersData[chatId][trigger]) {
-        delete filtersData[chatId][trigger];
-        saveFilters();
-        await event.message.edit({ text: `\`Filter for '\`${trigger}\`' removed.\`` });
-      } else {
-        await event.message.edit({ text: `\`No filter found for '\`${trigger}\`'.\`` });
+      if (filterDoc) {
+          const filtersMap = filterDoc.get('filters') || filterDoc.filters;
+          let deleted = false;
+          if (filtersMap.delete && filtersMap.has(trigger)) {
+              filtersMap.delete(trigger);
+              deleted = true;
+          } else if (filtersMap[trigger]) {
+              delete filtersMap[trigger];
+              deleted = true;
+          }
+          
+          if (deleted) {
+              await filterDoc.save();
+              await event.message.edit({ text: `\`Filter for '\`${trigger}\`' removed.\`` });
+              return;
+          }
       }
+      
+      await event.message.edit({ text: `\`No filter found for '\`${trigger}\`'.\`` });
     }
   },
   {
@@ -93,13 +94,24 @@ export default [
     usage: "Use .filters to execute this command.", category: "Admin",
     handler: async (event: NewMessageEvent) => {
       const chatId = event.chatId?.toString();
-      if (!chatId || !filtersData[chatId] || Object.keys(filtersData[chatId]).length === 0) {
+      if (!chatId) return;
+      
+      const filtersMap = await getChatFilters(chatId);
+      
+      if (!filtersMap) {
+        await event.message.edit({ text: "`No active filters in this chat.`" });
+        return;
+      }
+      
+      const entries = filtersMap.entries ? Array.from(filtersMap.entries()) : Object.entries(filtersMap);
+      
+      if (entries.length === 0) {
         await event.message.edit({ text: "`No active filters in this chat.`" });
         return;
       }
       
       let msg = "**Active Filters here:**\n\n";
-      for (const trigger in filtersData[chatId]) {
+      for (const [trigger] of entries) {
         msg += `• \`${trigger}\`\n`;
       }
       
@@ -110,18 +122,23 @@ export default [
 
 export const rawListener = async (event: NewMessageEvent) => {
   const chatId = event.chatId?.toString();
-  if (!chatId || !filtersData[chatId]) return;
+  if (!chatId) return;
   
   // Ignore our own messages for filters so we don't loop
   if (event.message.out) return;
   
   const text = event.message.text?.toLowerCase() || "";
   
-  for (const trigger in filtersData[chatId]) {
+  const filtersMap = await getChatFilters(chatId);
+  if (!filtersMap) return;
+  
+  const entries = filtersMap.entries ? Array.from(filtersMap.entries()) : Object.entries(filtersMap);
+  
+  for (const [trigger, reply] of entries as [string, string][]) {
     // Exact match or separate word match
     const regex = new RegExp(`(^|\\s)${trigger}(\\s|$)`, "i");
     if (regex.test(text)) {
-      await event.message.reply({ message: filtersData[chatId][trigger] });
+      await event.message.reply({ message: reply });
       break;
     }
   }

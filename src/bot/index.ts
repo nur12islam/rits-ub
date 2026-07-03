@@ -3,6 +3,9 @@ import { StringSession } from "telegram/sessions/index.js";
 import { loadPlugins } from "./pluginManager.js";
 import { Config } from "./config.js";
 import fs from "fs";
+import { connectDB } from "./db/mongoose.js";
+import { Sudo } from "./db/models/Sudo.js";
+import { Session } from "./db/models/Session.js";
 
 export let botClient: TelegramClient | null = null;
 export let assistantBot: TelegramClient | null = null;
@@ -13,28 +16,25 @@ let botUser: any = null;
 export const COMMAND_PREFIX = Config.CMD_TRIGGER;
 export const sudoUsers = new Set<string>();
 
-export function loadSudo() {
+export async function loadSudo() {
   try {
-    if (fs.existsSync("sudo.json")) {
-      const data = JSON.parse(fs.readFileSync("sudo.json", "utf8"));
-      data.forEach((id: string) => sudoUsers.add(id));
+    const sudoDoc = await Sudo.findOne();
+    if (sudoDoc) {
+      sudoDoc.users.forEach((id: string) => sudoUsers.add(id));
     }
     Config.SUDO_USERS.forEach((id: number) => sudoUsers.add(id.toString()));
   } catch(e) {
-    console.error("Failed to load sudo.json", e);
+    console.error("Failed to load sudo users from db", e);
   }
 }
 
-export function saveSudo() {
+export async function saveSudo() {
   try {
-    fs.writeFileSync("sudo.json", JSON.stringify(Array.from(sudoUsers)));
+    await Sudo.findOneAndUpdate({}, { users: Array.from(sudoUsers) }, { upsert: true, new: true });
   } catch(e) {
-    console.error("Failed to save sudo.json", e);
+    console.error("Failed to save sudo users to db", e);
   }
 }
-
-// Load sudo on init
-loadSudo();
 
 export async function logToChannel(message: string, buttons?: any) {
   if (logChannelId) {
@@ -64,6 +64,8 @@ export async function startBot(
   floodWaitSeconds = null;
 
   try {
+    await connectDB();
+    await loadSudo(); // Load sudo on init when DB is connected
     const stringSession = new StringSession(sessionString);
     botClient = new TelegramClient(stringSession, apiId, apiHash, {
       connectionRetries: 5,
@@ -90,8 +92,9 @@ export async function startBot(
       console.log("Starting assistant bot...");
       let assistantSessionStr = "";
       try {
-        if (fs.existsSync("assistant_session.txt")) {
-          assistantSessionStr = fs.readFileSync("assistant_session.txt", "utf8");
+        const assistantSessionDoc = await Session.findOne({ name: 'assistant' });
+        if (assistantSessionDoc && assistantSessionDoc.sessionString) {
+          assistantSessionStr = assistantSessionDoc.sessionString;
         }
       } catch(e) {}
       
@@ -114,8 +117,7 @@ export async function startBot(
             if (e.errorMessage === "SESSION_REVOKED" || e.errorMessage === "AUTH_KEY_UNREGISTERED") {
                 console.log("Assistant session revoked, re-authenticating...");
                 try {
-                    const fs = await import("fs");
-                    fs.unlinkSync("assistant_session.txt");
+                    await Session.deleteOne({ name: 'assistant' });
                 } catch(err) {}
                 
                 try { await assistantBot.disconnect(); await assistantBot.destroy(); } catch (e) {}
@@ -134,7 +136,11 @@ export async function startBot(
         console.log("Assistant bot connected.");
         
         try {
-          fs.writeFileSync("assistant_session.txt", assistantBot.session.save() as unknown as string);
+          await Session.findOneAndUpdate(
+              { name: 'assistant' },
+              { sessionString: assistantBot.session.save() as unknown as string },
+              { upsert: true, new: true }
+          );
         } catch(e) {}
         
         import("./inlineMenu.js").then(m => m.registerInlineMenus(assistantBot!)).catch(e => console.error(e));
@@ -154,7 +160,7 @@ export async function startBot(
         assistantBot = null;
         if (e.errorMessage === "SESSION_REVOKED" || e.errorMessage === "AUTH_KEY_UNREGISTERED") {
             try {
-                fs.unlinkSync("assistant_session.txt");
+                await Session.deleteOne({ name: 'assistant' });
             } catch (err) {}
         }
         await logToChannel(`⚠️ **RITS started, but Assistant Bot failed to start:** ${lastError}`);

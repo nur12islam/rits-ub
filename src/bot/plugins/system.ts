@@ -56,6 +56,10 @@ export default [
       const key = args[0];
       const value = args.slice(1).join(" ");
       
+      const { Var } = await import("../db/models/Var.js");
+      await Var.findOneAndUpdate({ key }, { value }, { upsert: true, new: true });
+      process.env[key] = value;
+      
       const envPath = path.join(process.cwd(), ".env");
       let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf-8") : "";
       const regex = new RegExp(`^${key}=.*$`, "m");
@@ -65,7 +69,7 @@ export default [
         envContent += `\n${key}=${value}`;
       }
       fs.writeFileSync(envPath, envContent.trim() + "\n");
-      await event.message.edit({ text: `\`var ${key} added!\`` });
+      await event.message.edit({ text: `\`var ${key} added to Database and .env!\`` });
     }
   },
   {
@@ -100,13 +104,18 @@ export default [
         await event.message.edit({ text: "`Usage: .delvar [KEY]`" });
         return;
       }
+      
+      const { Var } = await import("../db/models/Var.js");
+      await Var.deleteOne({ key });
+      delete process.env[key];
+      
       const envPath = path.join(process.cwd(), ".env");
       let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf-8") : "";
       const regex = new RegExp(`^${key}=.*$`, "m");
       if (regex.test(envContent)) {
         envContent = envContent.replace(regex, "").replace(/\n\n+/g, '\n');
         fs.writeFileSync(envPath, envContent.trim() + "\n");
-        await event.message.edit({ text: `\`var ${key} deleted!\`` });
+        await event.message.edit({ text: `\`var ${key} deleted from Database and .env!\`` });
       } else {
         await event.message.edit({ text: `\`var ${key} not found!\`` });
       }

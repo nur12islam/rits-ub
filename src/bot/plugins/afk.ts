@@ -1,9 +1,7 @@
 import { NewMessageEvent } from "telegram/events/index.js";
 import { isOutgoing, logToChannel } from "../index.js";
-import fs from "fs";
 import { Button } from "telegram/tl/custom/button.js";
-
-const AFK_FILE = "afk.json";
+import { AFK } from "../db/models/AFK.js";
 
 const AFK_REASONS = [
     "I'm busy right now. Please talk in a bag and when I come back you can just give me the bag!",
@@ -29,34 +27,20 @@ const AFK_REASONS = [
     "I am not here right now...\nbut if I was...\n\nwouldn't that be awesome?"
 ];
 
-let afkData: {
-  isAfk: boolean;
-  reason: string;
-  time: number;
-  users: Record<string, { pcount: number; gcount: number; mention: string }>;
-} = {
-  isAfk: false,
-  reason: "",
-  time: 0,
-  users: {}
-};
+let cachedAfk: any = null;
 
-function loadAfk() {
-  try {
-    if (fs.existsSync(AFK_FILE)) {
-      const data = JSON.parse(fs.readFileSync(AFK_FILE, "utf8"));
-      afkData = { ...afkData, ...data };
+async function loadAfk() {
+    if (!cachedAfk) {
+        cachedAfk = await AFK.findOne() || await AFK.create({ isAfk: false, reason: "", time: 0, users: {} });
     }
-  } catch (e) {}
+    return cachedAfk;
 }
 
-function saveAfk() {
-  try {
-    fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2));
-  } catch (e) {}
+async function saveAfk() {
+    if (cachedAfk) {
+        await cachedAfk.save();
+    }
 }
-
-loadAfk();
 
 function formatAfkTime(ms: number) {
     let secs = Math.floor(ms / 1000);
@@ -83,11 +67,12 @@ export default [
         const text = event.message.text || "";
         const reason = text.split(" ").slice(1).join(" ") || "";
         
+        const afkData = await loadAfk();
         afkData.isAfk = true;
         afkData.reason = reason;
         afkData.time = Date.now();
-        afkData.users = {};
-        saveAfk();
+        afkData.users = new Map(); // Clear users using Map for mongoose Map
+        await saveAfk();
         
         const logReason = reason || "No reason provided";
         await logToChannel(`You went AFK! : \`${logReason}\``);
@@ -97,6 +82,8 @@ export default [
 ];
 
 export const rawListener = async (event: NewMessageEvent) => {
+    const afkData = await loadAfk();
+    
     if (isOutgoing(event) && afkData.isAfk) {
         if (event.message.text && event.message.text.startsWith(".afk")) return;
         
@@ -107,7 +94,9 @@ export const rawListener = async (event: NewMessageEvent) => {
         
         const msg = await event.message.reply({ message: "`I'm no longer AFK!`" });
         
-        const usersEntries = Object.entries(afkData.users);
+        const usersMap = afkData.get('users') || afkData.users; // Support Map
+        const usersEntries = usersMap.entries ? Array.from(usersMap.entries()) : Object.entries(usersMap);
+        
         if (usersEntries.length > 0) {
             let p_msg = '';
             let g_msg = '';
@@ -117,7 +106,7 @@ export const rawListener = async (event: NewMessageEvent) => {
             const buttons = [];
             let currentRow = [];
             
-            for (const [userId, u] of usersEntries) {
+            for (const [userId, u] of usersEntries as [string, any][]) {
                 if (u.pcount > 0) {
                     p_msg += `👤 ${u.mention} ✉️ **${u.pcount}**\n`;
                     p_count += u.pcount;
@@ -146,13 +135,13 @@ export const rawListener = async (event: NewMessageEvent) => {
             
             await logToChannel(logOut, buttons);
             
-            afkData.users = {};
-            saveAfk();
+            afkData.users = new Map();
+            await saveAfk();
         } else {
             setTimeout(() => {
                 msg.delete().catch(() => {});
             }, 3000);
-            saveAfk();
+            await saveAfk();
         }
         return;
     }
@@ -184,13 +173,15 @@ export const rawListener = async (event: NewMessageEvent) => {
             const nameText = sender.firstName || sender.username || "User";
             const buttons = [[Button.url(nameText, `tg://openmessage?user_id=${sender.id}`)]];
             
-            if (!afkData.users[userId]) {
-                afkData.users[userId] = { pcount: 0, gcount: 0, mention: nameText };
+            const usersMap = afkData.get('users') || afkData.users;
+            let userStats = usersMap.get ? usersMap.get(userId) : usersMap[userId];
+            if (!userStats) {
+                userStats = { pcount: 0, gcount: 0, mention: nameText };
             }
 
             // To avoid spamming back on every message, Userge uses random(2, 4) probability
             // Let's reply every 3 messages for simplicity, or on the first message
-            const totalUserMsgs = afkData.users[userId].pcount + afkData.users[userId].gcount;
+            const totalUserMsgs = userStats.pcount + userStats.gcount;
             
             if (totalUserMsgs % 3 === 0) {
                 let outStr = "";
@@ -203,10 +194,10 @@ export const rawListener = async (event: NewMessageEvent) => {
             }
 
             if (isPrivate) {
-                afkData.users[userId].pcount += 1;
+                userStats.pcount += 1;
                 await logToChannel(`#PRIVATE\n${nameText} send you\n\n${message.text || "Media"}`, buttons);
             } else {
-                afkData.users[userId].gcount += 1;
+                userStats.gcount += 1;
                 let chatTitle = "Group";
                 const chat = await message.getChat() as any;
                 if (chat) chatTitle = chat.title || chatTitle;
@@ -225,7 +216,12 @@ export const rawListener = async (event: NewMessageEvent) => {
                 await logToChannel(`#GROUP\n${nameText} tagged you in **${chatTitle}**\n\n${message.text || "Media"}`, buttons);
             }
             
-            saveAfk();
+            if (usersMap.set) {
+                usersMap.set(userId, userStats);
+            } else {
+                usersMap[userId] = userStats;
+            }
+            await saveAfk();
         }
     }
 };

@@ -12,7 +12,7 @@ export default [
       const reply = await event.message.getReplyMessage();
       if (reply && reply.senderId) {
         sudoUsers.add(reply.senderId.toString());
-        saveSudo();
+        await saveSudo();
         await event.message.edit({ text: `\`Successfully added ${reply.senderId} to sudo.\`` });
       } else {
         await event.message.edit({ text: "`Reply to a user to add them to sudo.`" });
@@ -29,7 +29,7 @@ export default [
       const reply = await event.message.getReplyMessage();
       if (reply && reply.senderId) {
         sudoUsers.delete(reply.senderId.toString());
-        saveSudo();
+        await saveSudo();
         await event.message.edit({ text: `\`Removed ${reply.senderId} from sudo.\`` });
       } else {
         await event.message.edit({ text: "`Reply to a user to remove them from sudo.`" });

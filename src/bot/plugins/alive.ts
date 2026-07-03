@@ -1,27 +1,22 @@
 import { NewMessageEvent } from "telegram/events/index.js";
+import { Alive } from "../db/models/Alive.js";
 import fs from "fs";
 import path from "path";
 
-const CONFIG_PATH = path.join(process.cwd(), "data", "alive_config.json");
-
-function getAliveMedia() {
-    if (fs.existsSync(CONFIG_PATH)) {
-        try {
-            const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-            if (config.mediaPath && fs.existsSync(config.mediaPath)) {
-                return config.mediaPath;
-            }
-        } catch (e) {
-            console.error("Failed to read alive config:", e);
-        }
+async function getAliveMedia() {
+    const record = await Alive.findOne();
+    if (record && record.mediaBuffer) {
+        // Write to a temp file and return it
+        const ext = record.mediaType || ".jpg";
+        const tempPath = path.join(process.cwd(), `temp_alive_media${ext}`);
+        fs.writeFileSync(tempPath, record.mediaBuffer);
+        return tempPath;
     }
     return "https://telegra.ph/file/4b52b217a1c0d486d38e2.jpg"; // Default image
 }
 
-function setAliveMedia(mediaPath: string) {
-    const dir = path.dirname(CONFIG_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify({ mediaPath }));
+async function setAliveMedia(buffer: Buffer, ext: string) {
+    await Alive.findOneAndUpdate({}, { mediaBuffer: buffer, mediaType: ext }, { upsert: true, new: true });
 }
 
 export const alivePlugin = {
@@ -38,10 +33,18 @@ export const alivePlugin = {
         
         const aliveMsg = `🌟 **RITS is Alive!**\n\n⚡ **Uptime:** ${uptimeStr}\n🚀 **Version:** 2.0 (Rewritten)\n💻 **System:** Custom TS Engine`;
         
+        const mediaPath = await getAliveMedia();
+        
         await event.client?.sendMessage(event.message.chatId!, {
-            file: getAliveMedia(),
+            file: mediaPath,
             message: aliveMsg,
         });
+        
+        if (mediaPath !== "https://telegra.ph/file/4b52b217a1c0d486d38e2.jpg" && fs.existsSync(mediaPath)) {
+            try {
+                fs.unlinkSync(mediaPath);
+            } catch (e) {}
+        }
         await event.message.delete();
     }
 };
@@ -75,14 +78,8 @@ export const setAlivePlugin = {
                 ext = ".mp4";
             }
             
-            const mediaDir = path.join(process.cwd(), "data");
-            if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
-            
-            const mediaPath = path.join(mediaDir, `alive_media${ext}`);
-            fs.writeFileSync(mediaPath, buffer as Buffer);
-            
-            setAliveMedia(mediaPath);
-            await event.message.edit({ text: "`✅ Alive media updated successfully!`" });
+            await setAliveMedia(buffer as Buffer, ext);
+            await event.message.edit({ text: "`✅ Alive media updated successfully in database!`" });
         } else {
             await event.message.edit({ text: "`❌ Failed to download media.`" });
         }

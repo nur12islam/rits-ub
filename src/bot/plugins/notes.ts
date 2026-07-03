@@ -1,28 +1,5 @@
 import { NewMessageEvent } from "telegram/events/index.js";
-import fs from "fs";
-
-const NOTES_FILE = "notes.json";
-let notesData: Record<string, string> = {};
-
-function loadNotes() {
-  try {
-    if (fs.existsSync(NOTES_FILE)) {
-      notesData = JSON.parse(fs.readFileSync(NOTES_FILE, "utf8"));
-    }
-  } catch (e) {
-    console.error("Failed to load notes.json");
-  }
-}
-
-function saveNotes() {
-  try {
-    fs.writeFileSync(NOTES_FILE, JSON.stringify(notesData));
-  } catch (e) {
-    console.error("Failed to save notes.json");
-  }
-}
-
-loadNotes();
+import { Note } from "../db/models/Note.js";
 
 export default [
   {
@@ -50,9 +27,12 @@ export default [
         return;
       }
       
-      notesData[name] = noteContent;
-      saveNotes();
-      await event.message.edit({ text: `\`Note saved as '${name}'.\`` });
+      try {
+          await Note.findOneAndUpdate({ name }, { content: noteContent }, { upsert: true, new: true });
+          await event.message.edit({ text: `\`Note saved as '${name}'.\`` });
+      } catch (err) {
+          await event.message.edit({ text: `\`Error saving note '${name}'.\`` });
+      }
     }
   },
   {
@@ -67,8 +47,9 @@ export default [
         return;
       }
       
-      if (notesData[name]) {
-        await event.message.edit({ text: notesData[name] });
+      const note = await Note.findOne({ name });
+      if (note) {
+        await event.message.edit({ text: note.content });
       } else {
         await event.message.edit({ text: `\`Note '${name}' not found.\`` });
       }
@@ -87,9 +68,8 @@ export default [
         return;
       }
       
-      if (notesData[name]) {
-        delete notesData[name];
-        saveNotes();
+      const res = await Note.deleteOne({ name });
+      if (res.deletedCount && res.deletedCount > 0) {
         await event.message.edit({ text: `\`Note '${name}' deleted.\`` });
       } else {
         await event.message.edit({ text: `\`Note '${name}' not found.\`` });
@@ -102,14 +82,14 @@ export default [
     command: "notes",
     usage: "Use .notes to execute this command.", category: "General",
     handler: async (event: NewMessageEvent) => {
-      const keys = Object.keys(notesData);
-      if (keys.length === 0) {
+      const notes = await Note.find({}, 'name');
+      if (notes.length === 0) {
         await event.message.edit({ text: "`No saved notes found.`" });
         return;
       }
       
       let msg = "**Saved Notes:**\n\n";
-      keys.forEach(k => msg += `• \`${k}\`\n`);
+      notes.forEach(n => msg += `• \`${n.name}\`\n`);
       await event.message.edit({ text: msg });
     }
   }

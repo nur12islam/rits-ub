@@ -1,48 +1,31 @@
 import { NewMessageEvent } from "telegram/events/index.js";
 import { isOutgoing, logToChannel, botClient } from "../index.js";
-import fs from "fs";
 import { Api } from "telegram";
 import { Button } from "telegram/tl/custom/button.js";
-
-const PMPERMIT_FILE = "pmpermit.json";
-
-let pmPermitData: {
-  approved: string[],
-  pmguard: boolean,
-  customMsg: string,
-  customBlockMsg: string,
-  limit: number
-} = {
-  approved: [],
-  pmguard: false,
-  customMsg: "Hello {fname} this is an automated message\nPlease wait until you get approved to direct message \nAnd please dont spam until then ",
-  customBlockMsg: "**You were automatically blocked**",
-  limit: 4
-};
+import { Pmpermit } from "../db/models/Pmpermit.js";
 
 let pmCounter: Record<string, number> = {};
 
-function loadPmPermit() {
-  try {
-    if (fs.existsSync(PMPERMIT_FILE)) {
-      const data = JSON.parse(fs.readFileSync(PMPERMIT_FILE, "utf8"));
-      pmPermitData = { ...pmPermitData, ...data };
-      if (!pmPermitData.limit) pmPermitData.limit = 4;
+let cachedPmPermit: any = null;
+
+async function loadPmPermit() {
+    if (!cachedPmPermit) {
+        cachedPmPermit = await Pmpermit.findOne() || await Pmpermit.create({
+            approved: [],
+            pmguard: false,
+            customMsg: "Hello {fname} this is an automated message\nPlease wait until you get approved to direct message \nAnd please dont spam until then ",
+            customBlockMsg: "**You were automatically blocked**",
+            limit: 4
+        });
     }
-  } catch (e) {
-    console.error("Failed to load pmpermit.json");
-  }
+    return cachedPmPermit;
 }
 
-function savePmPermit() {
-  try {
-    fs.writeFileSync(PMPERMIT_FILE, JSON.stringify(pmPermitData, null, 2));
-  } catch (e) {
-    console.error("Failed to save pmpermit.json");
-  }
+async function savePmPermit() {
+    if (cachedPmPermit) {
+        await cachedPmPermit.save();
+    }
 }
-
-loadPmPermit();
 
 async function getId(event: NewMessageEvent): Promise<string | null> {
   if (event.message.replyToMsgId) {
@@ -101,9 +84,10 @@ export default [
       const userId = await getId(event);
       if (userId) {
         if (pmCounter[userId]) delete pmCounter[userId];
+        const pmPermitData = await loadPmPermit();
         if (!pmPermitData.approved.includes(userId)) {
             pmPermitData.approved.push(userId);
-            savePmPermit();
+            await savePmPermit();
             try {
                 await event.client?.invoke(new Api.contacts.Unblock({ id: userId }));
             } catch(e) {}
@@ -125,17 +109,18 @@ export default [
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
+      const pmPermitData = await loadPmPermit();
       if (text.includes("-all")) {
           pmPermitData.approved = [];
-          savePmPermit();
+          await savePmPermit();
           await event.message.edit({ text: "`Deleted all allowed Pms.`" });
           return;
       }
       const userId = await getId(event);
       if (userId) {
           if (pmPermitData.approved.includes(userId)) {
-              pmPermitData.approved = pmPermitData.approved.filter(id => id !== userId);
-              savePmPermit();
+              pmPermitData.approved = pmPermitData.approved.filter((id: string) => id !== userId);
+              await savePmPermit();
               await event.message.edit({ text: "`Prohibitted to direct message`" });
           } else {
               await event.message.edit({ text: "`Nothing was changed`" });
@@ -152,6 +137,7 @@ export default [
     usage: "Use .listpm to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
+      const pmPermitData = await loadPmPermit();
       if (pmPermitData.approved.length === 0) {
           await event.message.edit({ text: "`Allowed list is empty`" });
           return;
@@ -170,8 +156,9 @@ export default [
     usage: "Use .pmguard to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
+      const pmPermitData = await loadPmPermit();
       pmPermitData.pmguard = !pmPermitData.pmguard;
-      savePmPermit();
+      await savePmPermit();
       if (pmPermitData.pmguard) {
           await event.message.edit({ text: "`PM_guard activated`" });
       } else {
@@ -188,15 +175,16 @@ export default [
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
+      const pmPermitData = await loadPmPermit();
       if (text.includes("-r")) {
           pmPermitData.customMsg = "Hello {fname} this is an automated message\nPlease wait until you get approved to direct message \nAnd please dont spam until then ";
-          savePmPermit();
+          await savePmPermit();
           await event.message.edit({ text: "`Custom NOpm message reset`" });
       } else {
           const msg = text.replace(/^\.setpmmsg\s*/, "").trim();
           if (msg) {
               pmPermitData.customMsg = msg;
-              savePmPermit();
+              await savePmPermit();
               await event.message.edit({ text: "`Custom NOpm message saved`" });
           } else {
               await event.message.edit({ text: "`invalid input!`" });
@@ -212,15 +200,16 @@ export default [
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
       const text = event.message.text || "";
+      const pmPermitData = await loadPmPermit();
       if (text.includes("-r")) {
           pmPermitData.customBlockMsg = "**You were automatically blocked**";
-          savePmPermit();
+          await savePmPermit();
           await event.message.edit({ text: "`Custom BLOCKpm message reset`" });
       } else {
           const msg = text.replace(/^\.setbpmmsg\s*/, "").trim();
           if (msg) {
               pmPermitData.customBlockMsg = msg;
-              savePmPermit();
+              await savePmPermit();
               await event.message.edit({ text: "`Custom BLOCKpm message saved`" });
           } else {
               await event.message.edit({ text: "`invalid input!`" });
@@ -239,8 +228,9 @@ export default [
       const limitStr = text.replace(/^\.setpmlimit\s*/, "").trim();
       const limit = parseInt(limitStr, 10);
       if (!isNaN(limit) && limit > 0) {
+          const pmPermitData = await loadPmPermit();
           pmPermitData.limit = limit;
-          savePmPermit();
+          await savePmPermit();
           await event.message.edit({ text: `\`PM guard limit set to ${limit}\`` });
       } else {
           await event.message.edit({ text: "`Please provide a valid number > 0!`" });
@@ -254,6 +244,7 @@ export default [
     usage: "Use .vpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
+      const pmPermitData = await loadPmPermit();
       await event.message.edit({ text: `--current PM message--\n\n${pmPermitData.customMsg}` });
     }
   },
@@ -264,19 +255,21 @@ export default [
     usage: "Use .vbpmmsg to execute this command.", category: "PMPermit",
     ownerOnly: true,
     handler: async (event: NewMessageEvent) => {
+      const pmPermitData = await loadPmPermit();
       await event.message.edit({ text: `--current blockPM message--\n\n${pmPermitData.customBlockMsg}` });
     }
   }
 ];
 
 export const rawListener = async (event: NewMessageEvent) => {
+  const pmPermitData = await loadPmPermit();
   if (isOutgoing(event)) {
       if (event.message.isPrivate) {
           const chatId = event.chatId?.toString();
           if (chatId && pmPermitData.pmguard && !pmPermitData.approved.includes(chatId)) {
                if (pmCounter[chatId]) delete pmCounter[chatId];
                pmPermitData.approved.push(chatId);
-               savePmPermit();
+               await savePmPermit();
                
                const user = await event.message.getSender() as any;
                let buttons = undefined;
