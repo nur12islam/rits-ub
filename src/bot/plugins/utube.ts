@@ -36,7 +36,6 @@ export const ytinfoPlugin = {
             await event.message.edit({ text: "`No link provided.`" });
             return;
         }
-
         await event.message.edit({ text: "Hold on ⏳ .." });
         
         try {
@@ -98,7 +97,7 @@ export const ytdesPlugin = {
             await event.message.edit({ text: "`No link provided.`" });
             return;
         }
-
+        
         await event.message.edit({ text: "Hold on ⏳ .." });
         
         try {
@@ -110,6 +109,7 @@ export const ytdesPlugin = {
                 if (!text) return text;
                 return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             }
+            
             let out = info.description ? `--Description--\n\n\t${escapeHtml(info.description)}` : "No descriptions found :(";
             
             if (out.length > 4096) {
@@ -122,143 +122,4 @@ export const ytdesPlugin = {
     }
 };
 
-export const ytdlPlugin = {
-    name: "YT Download",
-    description: "Download from youtube",
-    command: "ytdl",
-    usage: "Use .ytdl to execute this command.", category: "Media",
-    handler: async (event: NewMessageEvent) => {
-        const text = event.message.text || "";
-        const parts = text.split(" ").slice(1);
-        
-        const flags: Record<string, string> = {};
-        let linkParts = [];
-        
-        for (let i = 0; i < parts.length; i++) {
-            const p = parts[i];
-            if (p.startsWith("-")) {
-                const match = p.match(/^-([a-z]+)(\d*)$/i);
-                if (match) {
-                    flags[match[1]] = match[2] || "1";
-                } else if (p.startsWith("-output=")) {
-                    flags["output"] = p.split("=")[1];
-                }
-            } else {
-                linkParts.push(p);
-            }
-        }
-        
-        let link = linkParts.join(" ").trim();
-        if (!link && event.message.replyToMsgId) {
-            const reply = await event.message.getReplyMessage();
-            link = reply?.text || "";
-        }
-        
-        if (!link) {
-            await event.message.edit({ text: "`No link provided.`" });
-            return;
-        }
-
-        await event.message.edit({ text: "Hold on ⏳ .." });
-        const startTime = Date.now();
-        const downDir = path.join(process.cwd(), "downloads", startTime.toString());
-        fs.mkdirSync(downDir, { recursive: true });
-        
-        let formatOpt = "bestvideo+bestaudio/best";
-        if (flags["a"] && flags["v"]) {
-            formatOpt = `${flags["v"]}+${flags["a"]}`;
-        } else if (flags["a"] && flags["a"] !== "1") {
-            formatOpt = flags["a"];
-        } else if (flags["v"] && flags["v"] !== "1") {
-            formatOpt = `${flags["v"]}+bestaudio`;
-        } else if (flags["m"]) {
-            formatOpt = "bestaudio/best";
-        }
-        
-        const args = [
-            "--js-runtimes", "nodejs",
-            "--no-playlist",
-            "-f", formatOpt,
-            "-o", path.join(downDir, "%(title)s-%(format)s.%(ext)s")
-        ];
-        
-        if (flags["m"]) {
-            args.push("-x", "--audio-format", "mp3", "--audio-quality", "320K");
-        }
-        if (flags["output"]) {
-            args.push("--merge-output-format", flags["output"]);
-        }
-        args.push(link);
-        
-        let lastEdit = 0;
-        
-        const ytDlp = await ensureYtDlp();
-        const ytProcess = spawn(ytDlp, args);
-        
-        let lastTextOut = "";
-        ytProcess.stdout.on("data", (data) => {
-            const out = data.toString();
-            const match = out.match(/\[download\]\s+([\d\.]+)%\s+of\s+[~]?([\d\.\w]+)\s+at\s+([\d\.\w]+\/s)\s+ETA\s+([\d:]+)/);
-            if (match) {
-                const now = Date.now();
-                if (now - lastEdit > 3000) {
-                    lastEdit = now;
-                    const percent = match[1];
-                    const speed = match[3];
-                    const eta = match[4];
-                    const textOut = `<b>Speed</b> >> ${speed}\n<b>ETA</b> >> ${eta}\n<b>Progress</b> >> ${percent}%\n`;
-                    if (textOut !== lastTextOut) {
-                        lastTextOut = textOut;
-                        event.message.edit({ text: textOut, parseMode: "html" }).catch((e: any) => {
-                            if (e.message && e.message.includes("MESSAGE_NOT_MODIFIED")) {
-                                // ignore
-                            }
-                        });
-                    }
-                }
-            }
-        });
-        
-        let stderrData = "";
-        ytProcess.stderr.on("data", (data) => {
-            stderrData += data.toString();
-        });
-        
-        ytProcess.on("close", async (code) => {
-            if (code === 0) {
-                try {
-                    const files = fs.readdirSync(downDir);
-                    const mediaFiles = files.filter(f => !f.toLowerCase().endsWith(".jpg") && !f.toLowerCase().endsWith(".png") && !f.toLowerCase().endsWith(".webp"));
-                    
-                    if (mediaFiles.length > 0) {
-                        const file = path.join(downDir, mediaFiles[0]);
-                        await event.message.edit({ text: `<b>YTDL completed in ${Math.round((Date.now() - startTime) / 1000)} seconds</b>\n<code>${file}</code>`, parseMode: "html" });
-                        
-                        if (flags["t"] || true) {
-                            await event.message.edit({ text: `Uploading...` });
-                            await event.client?.sendMessage(event.message.chatId!, {
-                                file: file,
-                                message: `Downloaded in ${Math.round((Date.now() - startTime) / 1000)}s`
-                            });
-                            await event.message.delete();
-                            fs.rmSync(downDir, { recursive: true, force: true });
-                        }
-                    } else {
-                        await event.message.edit({ text: "`Nothing found!`" });
-                    }
-                } catch (e: any) {
-                    await event.message.edit({ text: `\`Upload failed: ${e.message}\`` });
-                }
-            } else {
-                await event.message.edit({ text: `\`Download failed with code ${code}. Error: ${stderrData.slice(0, 500)}\`` });
-            }
-        });
-        
-        ytProcess.on("error", async (err) => {
-            await event.message.edit({ text: `\`Process error: ${err.message}\`` });
-        });
-    }
-};
-
-export default [ytinfoPlugin, ytdesPlugin, ytdlPlugin];
-
+export default [ytinfoPlugin, ytdesPlugin];
