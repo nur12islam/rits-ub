@@ -33,7 +33,7 @@ export default [
           filterDoc = new Filter({ chatId, filters: new Map() });
       }
       
-      const filtersMap = filterDoc.get('filters') || filterDoc.filters;
+      const filtersMap = (filterDoc.get('filters') || filterDoc.filters) as any;
       if (filtersMap.set) {
           filtersMap.set(trigger, reply);
       } else {
@@ -67,7 +67,7 @@ export default [
       const filterDoc = await Filter.findOne({ chatId });
       
       if (filterDoc) {
-          const filtersMap = filterDoc.get('filters') || filterDoc.filters;
+          const filtersMap = (filterDoc.get('filters') || filterDoc.filters) as any;
           let deleted = false;
           if (filtersMap.delete && filtersMap.has(trigger)) {
               filtersMap.delete(trigger);
@@ -96,7 +96,7 @@ export default [
       const chatId = event.chatId?.toString();
       if (!chatId) return;
       
-      const filtersMap = await getChatFilters(chatId);
+      const filtersMap = (await getChatFilters(chatId)) as any;
       
       if (!filtersMap) {
         await event.message.edit({ text: "`No active filters in this chat.`" });
@@ -111,7 +111,7 @@ export default [
       }
       
       let msg = "**Active Filters here:**\n\n";
-      for (const [trigger] of entries) {
+      for (const [trigger] of entries as any[]) {
         msg += `• \`${trigger}\`\n`;
       }
       
@@ -129,7 +129,7 @@ export const rawListener = async (event: NewMessageEvent) => {
   
   const text = event.message.text?.toLowerCase() || "";
   
-  const filtersMap = await getChatFilters(chatId);
+  const filtersMap = (await getChatFilters(chatId)) as any;
   if (!filtersMap) return;
   
   const entries = filtersMap.entries ? Array.from(filtersMap.entries()) : Object.entries(filtersMap);

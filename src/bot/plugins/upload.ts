@@ -28,7 +28,7 @@ export const uploadPlugin = {
             await event.client?.sendMessage(event.message.chatId!, {
                 file: absolutePath,
                 message: `Uploaded: ${path.basename(absolutePath)}`,
-                forceDocument: true
+                forceDocument: true as any
             });
             await event.message.delete();
         } catch (e: any) {

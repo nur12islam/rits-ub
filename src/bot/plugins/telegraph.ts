@@ -19,7 +19,7 @@ export const telegraphPlugin = {
             return;
         }
 
-        const isMedia = replyMessage.photo || replyMessage.video || replyMessage.document || replyMessage.sticker || replyMessage.animation;
+        const isMedia = replyMessage.photo || replyMessage.video || replyMessage.document || replyMessage.sticker || (replyMessage as any).animation;
         const isText = replyMessage.text && !isMedia;
 
         let isTextFile = false;
@@ -37,7 +37,7 @@ export const telegraphPlugin = {
              return;
         } else if (isTextFile) {
             await event.message.edit({ text: "`Downloading text file...`" });
-            const buffer = await event.client?.downloadMedia(replyMessage, { workers: 1 });
+            const buffer = await event.client?.downloadMedia(replyMessage, {});
             if (!buffer) {
                 await event.message.edit({ text: "Failed to download text file." });
                 return;
@@ -48,12 +48,12 @@ export const telegraphPlugin = {
         }
 
         // Media upload
-        if (!replyMessage.photo && !replyMessage.animation && !(replyMessage.video && mimeType === "video/mp4") && !replyMessage.sticker && !replyMessage.document) {
+        if (!replyMessage.photo && !(replyMessage as any).animation && !(replyMessage.video && mimeType === "video/mp4") && !replyMessage.sticker && !replyMessage.document) {
             await event.message.edit({ text: "Unsupported media type for Graph.org (limit 5MB, supported: jpg, png, mp4, gif)." });
             return;
         }
 
-        if (replyMessage.file && replyMessage.file.size && replyMessage.file.size > T_LIMIT) {
+        if ((replyMessage as any).file && (replyMessage as any).file.size && Number((replyMessage as any).file.size) > T_LIMIT) {
              await event.message.edit({ text: "File size exceeds 5MB limit for Graph.org." });
              return;
         }
@@ -61,9 +61,7 @@ export const telegraphPlugin = {
         await event.message.edit({ text: "`Downloading media...`" });
 
         try {
-            const buffer = await event.client?.downloadMedia(replyMessage, {
-                workers: 1,
-            });
+            const buffer = await event.client?.downloadMedia(replyMessage, {});
 
             if (!buffer) {
                 await event.message.edit({ text: "Failed to download media." });
@@ -73,11 +71,11 @@ export const telegraphPlugin = {
             await event.message.edit({ text: "`Uploading to Graph.org...`" });
 
             let ext = "jpg";
-            if (replyMessage.video || replyMessage.animation) ext = "mp4";
+            if (replyMessage.video || (replyMessage as any).animation) ext = "mp4";
             else if (replyMessage.sticker) ext = "webp";
 
-            if (replyMessage.file && replyMessage.file.ext) {
-                 ext = replyMessage.file.ext.replace(".", "");
+            if ((replyMessage as any).file && (replyMessage as any).file.ext) {
+                 ext = (replyMessage as any).file.ext.replace(".", "");
             }
 
             const formData = new FormData();

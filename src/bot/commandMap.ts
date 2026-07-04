@@ -183,7 +183,11 @@ export const COMMAND_MAP: any = {
           "ytinfo",
           "ytdes",
           "ytdl",
-          "rmbg"
+          "rmbg",
+          "webss",
+          "plet",
+          "kang",
+          "stkrinfo"
         ]
       }
     }
@@ -206,6 +210,7 @@ export const COMMAND_MAP: any = {
       random: {
         title: "🎲 Random",
         commands: [
+          "q",
           "quote",
           "meme",
           "dog",

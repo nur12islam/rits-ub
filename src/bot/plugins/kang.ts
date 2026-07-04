@@ -77,7 +77,7 @@ export const kangPlugin = {
                 resize = true;
             } else if (mime.includes("tgsticker")) {
                 isAnim = true;
-            } else if (mime.includes("video") && replied.document.size.lessThan(10485760)) {
+            } else if (mime.includes("video") && Number(replied.document.size) < 10485760) {
                 resize = true;
                 isVideo = true;
             } else {
@@ -206,7 +206,7 @@ export const kangPlugin = {
                 sent = await client.sendMessage("Stickers", { message: packTitle });
                 await getResponse(client, "Stickers", sent.id);
                 
-                sent = await client.sendMessage("Stickers", { file: mediaPath, forceDocument: true });
+                sent = await client.sendMessage("Stickers", { file: mediaPath, forceDocument: true as any });
                 const rsp = await getResponse(client, "Stickers", sent.id);
                 if (rsp && rsp.message.includes("Sorry, the file type is invalid")) {
                     await message.edit({ text: "`Failed to add sticker, use` @Stickers `bot to add the sticker manually.`" });
@@ -237,7 +237,7 @@ export const kangPlugin = {
                 sent = await client.sendMessage("Stickers", { message: packName });
                 await getResponse(client, "Stickers", sent.id);
                 
-                sent = await client.sendMessage("Stickers", { file: mediaPath, forceDocument: true });
+                sent = await client.sendMessage("Stickers", { file: mediaPath, forceDocument: true as any });
                 const rsp = await getResponse(client, "Stickers", sent.id);
                 if (rsp && rsp.message.includes("Sorry, the file type is invalid")) {
                     await message.edit({ text: "`Failed to add sticker, use` @Stickers `bot to add the sticker manually.`" });
@@ -299,11 +299,11 @@ export const stkrinfoPlugin = {
             }));
             
             const emojis = new Set<string>();
-            for (const pack of getStickerSet.packs) {
+            for (const pack of (getStickerSet as any).packs) {
                 emojis.add(pack.emoticon);
             }
             
-            const set = getStickerSet.set;
+            const set = (getStickerSet as any).set;
             
             const outStr = `**Sticker Title:** \`${set.title}\`\n` +
                 `**Sticker Short Name:** \`${set.shortName}\`\n` +

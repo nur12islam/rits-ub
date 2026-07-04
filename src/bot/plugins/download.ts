@@ -18,9 +18,7 @@ export const downloadPlugin = {
         await event.message.edit({ text: "Downloading media..." });
 
         try {
-            const buffer = await event.client?.downloadMedia(replyMessage, {
-                workers: 1,
-            });
+            const buffer = await event.client?.downloadMedia(replyMessage, {});
 
             if (!buffer) {
                 await event.message.edit({ text: "Failed to download media." });

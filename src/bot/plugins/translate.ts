@@ -147,8 +147,7 @@ export const ttsPlugin = {
 
             await event.client?.sendMessage(event.message.chatId!, {
                 file: outPath,
-                replyTo: event.message.replyToMsgId || event.message.id,
-                voiceNote: true
+                replyTo: event.message.replyToMsgId || event.message.id
             });
 
             fs.unlinkSync(outPath);

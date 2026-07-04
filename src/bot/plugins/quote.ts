@@ -5,6 +5,7 @@ export const quotePlugin = {
     name: "Quote",
     description: "Quote a message using QuotLyBot",
     command: "q",
+    aliases: ["quote"],
     usage: ".q [text or reply to msg]",
     category: "Media",
     handler: async (event: NewMessageEvent) => {
@@ -24,27 +25,27 @@ export const quotePlugin = {
         await message.edit({ text: "⏳ Processing..." });
 
         try {
-            let sentMessageId: number;
-            
-            // Try to unblock bot just in case
+            // Unblock bot just in case
             await client.invoke(new Api.contacts.Unblock({ id: "QuotLyBot" })).catch(() => {});
 
+            // Get the last message ID before we send anything
+            const initialHistory = await client.getMessages("QuotLyBot", { limit: 1 });
+            let lastMsgId = (initialHistory && initialHistory.length > 0) ? initialHistory[0].id : 0;
+
             if (replied && !args) {
-                const forwarded = await client.forwardMessages("QuotLyBot", {
+                await client.forwardMessages("QuotLyBot", {
                     messages: [replied.id],
                     fromPeer: message.chatId,
                 });
-                sentMessageId = Array.isArray(forwarded) && forwarded.length > 0 ? forwarded[0].id : (forwarded as any).id;
             } else {
-                const sent = await client.sendMessage("QuotLyBot", { message: args });
-                sentMessageId = sent.id;
+                await client.sendMessage("QuotLyBot", { message: args });
             }
 
             let response;
             for (let i = 0; i < 15; i++) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 const history = await client.getMessages("QuotLyBot", { limit: 1 });
-                if (history && history.length > 0 && history[0].id > sentMessageId) {
+                if (history && history.length > 0 && history[0].id > lastMsgId && !history[0].out) {
                     response = history[0];
                     break;
                 }
