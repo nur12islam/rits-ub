@@ -97,7 +97,7 @@ export const telegraphPlugin = {
 
             if (data && data[0] && data[0].src) {
                 const url = `https://graph.org${data[0].src}`;
-                await sendInlineGraphLink(event, url);
+                await sendInlineGraphLink(event, url, "Media");
             } else {
                  throw new Error("Invalid response from Graph.org");
             }
@@ -149,7 +149,7 @@ async function handleText(event: NewMessageEvent, textContent: string, commandTe
         const pageData = pageRes.data;
         
         if (pageData.ok) {
-            await sendInlineGraphLink(event, pageData.result.url);
+            await sendInlineGraphLink(event, pageData.result.url, title);
         } else {
              throw new Error(pageData.error || "Failed to create page");
         }
@@ -158,11 +158,12 @@ async function handleText(event: NewMessageEvent, textContent: string, commandTe
     }
 }
 
-async function sendInlineGraphLink(event: NewMessageEvent, url: string) {
+async function sendInlineGraphLink(event: NewMessageEvent, url: string, title: string) {
     if (assistantBot) {
         try {
             const me = await assistantBot.getMe() as any;
-            const results = await botClient!.inlineQuery(me.username, `graph_btn ${url}`);
+            const queryPayload = Buffer.from(title).toString('base64');
+            const results = await botClient!.inlineQuery(me.username, `graph_btn ${url} ${queryPayload}`);
             if (results && results.length > 0) {
                 await results[0].click(event.chatId);
                 await event.message.delete({ revoke: true }).catch(() => {});
@@ -172,7 +173,7 @@ async function sendInlineGraphLink(event: NewMessageEvent, url: string) {
             console.error("Inline query failed:", e);
         }
     }
-    await event.message.edit({ text: `**[Here is your Graph.org Link!](${url})**`, linkPreview: false });
+    await event.message.edit({ text: `Tap the button below to open ${title}\n\n[Open ${title}](${url})`, linkPreview: false });
 }
 
 export default [telegraphPlugin];
