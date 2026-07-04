@@ -75,6 +75,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/quote.js"),
     await import("./plugins/stickerify.js"),
     await import("./plugins/kang.js"),
+    await import("./plugins/oai.js"),
   ];
 
   for (const mod of modules) {

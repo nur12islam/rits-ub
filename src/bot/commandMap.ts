@@ -174,7 +174,8 @@ export const COMMAND_MAP: any = {
           "getpaste",
           "cbutton",
           "tr",
-          "tts"
+          "tts",
+          "oai"
         ]
       },
       media: {
