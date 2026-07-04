@@ -1,8 +1,9 @@
 import { NewMessageEvent } from "telegram/events/index.js";
-import { spawn } from "child_process";
+import { spawn, exec } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import util from "util";
 
 // Use the path to the installed yt-dlp bin inside our workspace bin/ folder 
 // or standard yt-dlp if it's on PATH. We'll use the one from utube.ts logic if needed, 
@@ -14,6 +15,8 @@ interface YtdlOptions {
   maxHeight?: string; // e.g. "720", "1080"
 }
 
+const execPromise = util.promisify(exec);
+
 // We'll dynamically resolve yt-dlp just in case, similar to utube.ts, 
 // but fallback to the global one if it exists.
 async function getYtDlpBin(): Promise<string> {
@@ -22,7 +25,9 @@ async function getYtDlpBin(): Promise<string> {
     if (fs.existsSync(ytdlpPath)) {
         return ytdlpPath;
     }
-    return "yt-dlp";
+    fs.mkdirSync(binDir, { recursive: true });
+    await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod +x ${ytdlpPath}`);
+    return ytdlpPath;
 }
 
 function downloadYoutube(url: string, options: YtdlOptions = {}): Promise<string> {
