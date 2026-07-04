@@ -71,6 +71,10 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/joke.js"),
     await import("./plugins/telegraph.js"),
     await import("./plugins/ytdlPlugin.js"),
+    await import("./plugins/webss.js"),
+    await import("./plugins/quote.js"),
+    await import("./plugins/stickerify.js"),
+    await import("./plugins/kang.js"),
   ];
 
   for (const mod of modules) {
