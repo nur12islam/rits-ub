@@ -1,6 +1,7 @@
 import { NewMessageEvent } from "telegram/events/index.js";
 import FormData from "form-data";
 import axios from "axios";
+import { assistantBot, botClient } from "../index.js";
 
 const T_LIMIT = 5242880; // 5MB
 
@@ -96,7 +97,7 @@ export const telegraphPlugin = {
 
             if (data && data[0] && data[0].src) {
                 const url = `https://graph.org${data[0].src}`;
-                await event.message.edit({ text: `**[Here is your Graph.org Link!](${url})**`, linkPreview: false });
+                await sendInlineGraphLink(event, url);
             } else {
                  throw new Error("Invalid response from Graph.org");
             }
@@ -148,13 +149,30 @@ async function handleText(event: NewMessageEvent, textContent: string, commandTe
         const pageData = pageRes.data;
         
         if (pageData.ok) {
-            await event.message.edit({ text: `**[Here is your Graph.org Link!](${pageData.result.url})**`, linkPreview: false });
+            await sendInlineGraphLink(event, pageData.result.url);
         } else {
              throw new Error(pageData.error || "Failed to create page");
         }
     } catch (e: any) {
         await event.message.edit({ text: `Error: ${e.message}` });
     }
+}
+
+async function sendInlineGraphLink(event: NewMessageEvent, url: string) {
+    if (assistantBot) {
+        try {
+            const me = await assistantBot.getMe() as any;
+            const results = await botClient!.inlineQuery(me.username, `graph_btn ${url}`);
+            if (results && results.length > 0) {
+                await results[0].click(event.chatId);
+                await event.message.delete({ revoke: true }).catch(() => {});
+                return;
+            }
+        } catch (e: any) {
+            console.error("Inline query failed:", e);
+        }
+    }
+    await event.message.edit({ text: `**[Here is your Graph.org Link!](${url})**`, linkPreview: false });
 }
 
 export default [telegraphPlugin];

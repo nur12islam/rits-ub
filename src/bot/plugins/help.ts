@@ -9,8 +9,11 @@ export default {
   command: "help",
     usage: "Use .help to execute this command.", category: "General",
   handler: async (event: NewMessageEvent) => {
-    // If assistantBot is available, use inline query results to show buttons
-    if (assistantBot) {
+    const text = event.message.text || "";
+    const args = text.split(" ").slice(1);
+
+    // If assistantBot is available and no arguments are provided, use inline query results to show buttons
+    if (assistantBot && args.length === 0) {
         if ((event as any).isAssistantBot) {
             try {
                 const { Button } = await import("telegram/tl/custom/button.js");
@@ -49,9 +52,6 @@ export default {
             }
         }
     }
-
-    const text = event.message.text || "";
-    const args = text.split(" ").slice(1);
     
     if (args.length === 0) {
         let helpText = "🤖 Personal RITS Modules 🤖\n\n";
@@ -118,9 +118,13 @@ export default {
 
         // 3. Is it a command?
         const plugins = getLoadedPlugins();
-        const cmd = plugins.find(p => p.command === query);
+        const cmd = plugins.find(p => p.command === query || (p.aliases && p.aliases.includes(query)));
         if (cmd) {
-           const helpText = `🗃 Plugin Status 🗃\n\n🔖 Plugin : ${cmd.name}\n📝 Use : ${cmd.usage || cmd.description}\n⚔ Command: ${COMMAND_PREFIX}${cmd.command}\n✅ Loaded : True`;
+           let helpText = `🗃 Plugin Status 🗃\n\n🔖 Plugin : ${cmd.name}\n📝 Use : ${cmd.usage || cmd.description}\n⚔ Command: ${COMMAND_PREFIX}${cmd.command}`;
+           if (cmd.aliases && cmd.aliases.length > 0) {
+               helpText += `\n🔗 Aliases: ${cmd.aliases.join(", ")}`;
+           }
+           helpText += `\n✅ Loaded : True`;
            await event.message.edit({ text: helpText });
         } else {
            await event.message.edit({ text: `\`Category or command '${query}' not found.\`` });

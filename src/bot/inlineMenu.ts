@@ -65,6 +65,24 @@ export function registerInlineMenus(client: TelegramClient) {
                     ],
                     cacheTime: 0
                 }));
+            } else if (query.startsWith("graph_btn ")) {
+                const url = query.substring(10).trim();
+                await client.invoke(new Api.messages.SetInlineBotResults({
+                    queryId: queryId,
+                    results: [
+                        new Api.InputBotInlineResult({
+                            id: "graph_btn",
+                            type: "article",
+                            title: "Graph.org Link",
+                            description: "Share the link",
+                            sendMessage: new Api.InputBotInlineMessageText({
+                                message: `**[Here is your Graph.org Link!](${url})**`,
+                                replyMarkup: client.buildReplyMarkup([[Button.url("Open Link", url)]])
+                            })
+                        })
+                    ],
+                    cacheTime: 0
+                }));
             }
         }
     }, new Raw({ types: [Api.UpdateBotInlineQuery] }));
