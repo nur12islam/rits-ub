@@ -41,6 +41,7 @@ function downloadYoutube(url: string, options: YtdlOptions = {}): Promise<string
       url,
       "-o", outTemplate,
       "--no-playlist",
+      "--js-runtimes", "node",
       "--restrict-filenames",
       "--match-filter", `duration<${MAX_DURATION_SECONDS}`,
     ];

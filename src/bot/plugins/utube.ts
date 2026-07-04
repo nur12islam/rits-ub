@@ -40,7 +40,7 @@ export const ytinfoPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            let cmd = `${ytDlp} --js-runtimes nodejs -j --no-playlist`; if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) { cmd += ` --cookies "${path.join(process.cwd(), "cookies.txt")}"`; } cmd += ` "${link}"`; const { stdout } = await execPromise(cmd);
+            let cmd = `${ytDlp} --js-runtimes node -j --no-playlist`; if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) { cmd += ` --cookies "${path.join(process.cwd(), "cookies.txt")}"`; } cmd += ` "${link}"`; const { stdout } = await execPromise(cmd);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
@@ -102,7 +102,7 @@ export const ytdesPlugin = {
         
         try {
             const ytDlp = await ensureYtDlp();
-            let cmd = `${ytDlp} --js-runtimes nodejs -j --no-playlist`; if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) { cmd += ` --cookies "${path.join(process.cwd(), "cookies.txt")}"`; } cmd += ` "${link}"`; const { stdout } = await execPromise(cmd);
+            let cmd = `${ytDlp} --js-runtimes node -j --no-playlist`; if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) { cmd += ` --cookies "${path.join(process.cwd(), "cookies.txt")}"`; } cmd += ` "${link}"`; const { stdout } = await execPromise(cmd);
             const info = JSON.parse(stdout);
             
             function escapeHtml(text: any) {
