@@ -69,6 +69,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/weather.js"),
     await import("./plugins/freemusic.js"),
     await import("./plugins/joke.js"),
+    await import("./plugins/telegraph.js"),
   ];
 
   for (const mod of modules) {
