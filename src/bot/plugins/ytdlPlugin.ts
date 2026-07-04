@@ -45,6 +45,10 @@ function downloadYoutube(url: string, options: YtdlOptions = {}): Promise<string
       "--match-filter", `duration<${MAX_DURATION_SECONDS}`,
     ];
 
+    if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) {
+        args.push("--cookies", path.join(process.cwd(), "cookies.txt"));
+    }
+
     if (options.audioOnly) {
       args.push("-x", "--audio-format", "mp3");
     } else {
