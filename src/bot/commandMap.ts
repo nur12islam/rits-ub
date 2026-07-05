@@ -175,7 +175,9 @@ export const COMMAND_MAP: any = {
           "cbutton",
           "tr",
           "tts",
-          "oai"
+          "oai",
+          "oair",
+          "oaidoc"
         ]
       },
       media: {

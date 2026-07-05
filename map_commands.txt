@@ -46,6 +46,9 @@ mock
 mute
 nopm
 notes
+oai
+oaidoc
+oair
 ocr
 paste
 pin

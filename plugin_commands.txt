@@ -8,7 +8,6 @@ b64de
 b64en
 ban
 block
-block
 calc
 cat
 clap
@@ -49,6 +48,9 @@ mock
 mute
 nopm
 notes
+oai
+oaidoc
+oair
 ocr
 paste
 pin
@@ -64,9 +66,7 @@ rmsudo
 save
 setalive
 setbio
-setbio
 setbpmmsg
-setname
 setname
 setpmlimit
 setpmmsg
@@ -78,7 +78,6 @@ shutdown
 slap
 sleep
 smode
-spam
 spam
 speedtest
 status
