@@ -1,12 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
 export class GeminiAPI {
-    private ai: GoogleGenAI;
+    private _ai: GoogleGenAI | null = null;
     private sessions: Map<string, any>;
 
     constructor() {
-        this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
         this.sessions = new Map();
+    }
+
+    private get ai(): GoogleGenAI {
+        if (!this._ai) {
+            this._ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+        }
+        return this._ai;
     }
 
     public async checkSetup(): Promise<boolean> {
