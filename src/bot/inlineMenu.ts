@@ -65,6 +65,40 @@ export function registerInlineMenus(client: TelegramClient) {
                     ],
                     cacheTime: 0
                 }));
+            } else if (query.startsWith("s_song ")) {
+                const parts = query.substring(7).trim().split(" ");
+                const chatId = parts[0];
+                const cacheKey = parts[1];
+                let videos: any[] = [];
+                try {
+                    const freemusic = await import("./plugins/freemusic.js");
+                    videos = freemusic.songSearchCache.get(cacheKey) || [];
+                } catch(e) {}
+                
+                const buttons = [];
+                for (const video of videos) {
+                    const btnData = Buffer.from(`dlsong|${chatId}|${cacheKey}|${video.videoId}`);
+                    buttons.push([Button.inline(`🎵 ${video.title} (${video.timestamp})`, btnData)]);
+                }
+                
+                if (buttons.length > 0) {
+                    await client.invoke(new Api.messages.SetInlineBotResults({
+                        queryId: queryId,
+                        results: [
+                            new Api.InputBotInlineResult({
+                                id: "song_search",
+                                type: "article",
+                                title: "Song Search Results",
+                                description: "Select a song to download",
+                                sendMessage: new Api.InputBotInlineMessageText({
+                                    message: "**Song Search Results**\nSelect a song below to download:",
+                                    replyMarkup: client.buildReplyMarkup(buttons)
+                                })
+                            })
+                        ],
+                        cacheTime: 0
+                    }));
+                }
             } else if (query.startsWith("graph_btn ")) {
                 const parts = query.substring(10).trim().split(" ");
                 const url = parts[0];
@@ -108,6 +142,29 @@ export function registerInlineMenus(client: TelegramClient) {
 
         const data = event.data?.toString("utf8") || "";
         
+        if (data.startsWith("dlsong|")) {
+            const parts = data.split("|");
+            const chatId = parts[1];
+            const cacheKey = parts[2];
+            const videoId = parts[3];
+            
+            await event.answer();
+            
+            let title = "Audio";
+            try {
+                const freemusic = await import("./plugins/freemusic.js");
+                const videos = freemusic.songSearchCache.get(cacheKey);
+                if (videos) {
+                    const v = videos.find(x => x.videoId === videoId);
+                    if (v) title = v.title;
+                }
+                
+                // Fire and forget
+                freemusic.downloadAndSendSong(chatId, videoId, title, event);
+            } catch(e) {}
+            return;
+        }
+
         if (data.startsWith("top_")) {
             const topKey = data.replace("top_", "");
             const topItem = COMMAND_MAP[topKey];
