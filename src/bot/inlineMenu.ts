@@ -148,8 +148,6 @@ export function registerInlineMenus(client: TelegramClient) {
             const cacheKey = parts[2];
             const videoId = parts[3];
             
-            await event.answer();
-            
             let title = "Audio";
             try {
                 const freemusic = await import("./plugins/freemusic.js");

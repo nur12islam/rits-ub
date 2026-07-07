@@ -74,8 +74,8 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
             await eventToEdit.answer({ message: "Uploading 📤..." }).catch(() => {});
         }
 
-        const peerId = typeof chatId === "string" && !isNaN(Number(chatId)) ? BigInt(chatId) : chatId;
-        await botClient?.sendMessage(peerId, {
+        const peerId = typeof chatId === "string" && /^-?\d+$/.test(chatId) ? BigInt(chatId) : chatId; console.log('Downloading for peerId:', peerId);
+        console.log("Sending message to peerId:", peerId); await botClient?.sendMessage(peerId, {
             file: filePath,
             message: `**${title}**\n*Downloaded via .song*`
         });
@@ -90,7 +90,7 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
             await eventToEdit.answer({ message: `Error: ${e.message}` }).catch(() => {});
         } else {
             const peerId = typeof chatId === "string" && !isNaN(Number(chatId)) ? BigInt(chatId) : chatId;
-            await botClient?.sendMessage(peerId, { message: `Error downloading ${title}: ${e.message}` });
+            console.log("Sending message to peerId:", peerId); await botClient?.sendMessage(peerId, { message: `Error downloading ${title}: ${e.message}` });
         }
     }
 }
@@ -134,28 +134,29 @@ export const freemusicPlugin = {
             // Delete the "Searching..." message since we're going to send an inline message via assistant
             await event.message.delete();
 
-            const inlineQuery = `s_song ${event.message.chatId} ${cacheKey}`;
+            console.log("Creating inline query for chatId:", event.chatId);
+            const inlineQuery = `s_song ${event.chatId} ${cacheKey}`;
             
             const results = await botClient!.invoke(new Api.messages.GetInlineBotResults({
                 bot: assistantMe.username,
-                peer: event.message.chatId,
+                peer: event.chatId,
                 query: inlineQuery,
                 offset: ""
             }));
 
             if (results && results.results && results.results.length > 0) {
                 await botClient!.invoke(new Api.messages.SendInlineBotResult({
-                    peer: event.message.chatId,
+                    peer: event.chatId,
                     queryId: results.queryId,
                     id: results.results[0].id,
                     clearDraft: true
                 }));
             } else {
-                 await botClient!.sendMessage(event.message.chatId!, { message: "Failed to get inline results." });
+                 await botClient!.sendMessage(event.chatId!, { message: "Failed to get inline results." });
             }
 
         } catch (e: any) {
-            await botClient!.sendMessage(event.message.chatId!, { message: `Error: ${e.message}` });
+            await botClient!.sendMessage(event.chatId!, { message: `Error: ${e.message}` });
         }
     }
 };
