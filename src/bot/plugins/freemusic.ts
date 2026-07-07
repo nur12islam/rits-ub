@@ -27,7 +27,7 @@ export const songSearchCache = new Map<string, any[]>();
 export async function downloadAndSendSong(chatId: string | number, videoId: string, title: string, eventToEdit?: any) {
     try {
         if (eventToEdit) {
-            await eventToEdit.edit({ text: `Downloading \`${title}\`...` });
+            await eventToEdit.answer({ message: `Downloading ${title}...` }).catch(() => {});
         }
         const ytdlpBin = await getYtDlpBin();
         const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "song-"));
@@ -64,37 +64,33 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
 
         const files = fs.readdirSync(outDir);
         if (files.length === 0) {
-            if (eventToEdit) await eventToEdit.edit({ text: `Could not download \`${title}\`.` });
+            if (eventToEdit) await eventToEdit.answer({ message: `Could not download ${title}.` }).catch(() => {});
             return;
         }
         
         const filePath = path.join(outDir, files[0]);
 
         if (eventToEdit) {
-            await eventToEdit.edit({ text: "Uploading 📤..." });
+            await eventToEdit.answer({ message: "Uploading 📤..." }).catch(() => {});
         }
 
-        await botClient?.sendMessage(chatId, {
+        const peerId = typeof chatId === "string" && !isNaN(Number(chatId)) ? BigInt(chatId) : chatId;
+        await botClient?.sendMessage(peerId, {
             file: filePath,
             message: `**${title}**\n*Downloaded via .song*`
         });
         
         if (eventToEdit) {
-            try {
-                if (eventToEdit.message) {
-                    await eventToEdit.message.delete();
-                } else {
-                    await eventToEdit.delete();
-                }
-            } catch (e) {}
+            // Can't delete inline messages this way easily, let it stay
         }
 
         fs.unlinkSync(filePath);
     } catch (e: any) {
         if (eventToEdit) {
-            await eventToEdit.edit({ text: `Error: ${e.message}` });
+            await eventToEdit.answer({ message: `Error: ${e.message}` }).catch(() => {});
         } else {
-            await botClient?.sendMessage(chatId, { message: `Error downloading ${title}: ${e.message}` });
+            const peerId = typeof chatId === "string" && !isNaN(Number(chatId)) ? BigInt(chatId) : chatId;
+            await botClient?.sendMessage(peerId, { message: `Error downloading ${title}: ${e.message}` });
         }
     }
 }
