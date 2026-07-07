@@ -1,14 +1,26 @@
 import { NewMessageEvent } from "telegram/events/index.js";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import util from "util";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 
 const execPromise = util.promisify(exec);
 
+async function getYtDlpBin(): Promise<string> {
+    const binDir = path.join(process.cwd(), "bin");
+    const ytdlpPath = path.join(binDir, "yt-dlp");
+    if (fs.existsSync(ytdlpPath)) {
+        return ytdlpPath;
+    }
+    fs.mkdirSync(binDir, { recursive: true });
+    await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod +x ${ytdlpPath}`);
+    return ytdlpPath;
+}
+
 export const freemusicPlugin = {
     name: "FreeMusic",
-    description: "Search and download free music previews (30s) using the iTunes Search API.",
+    description: "Search and download full songs using YouTube search.",
     command: "song",
     usage: ".song [song name]",
     category: "Media",
@@ -21,53 +33,55 @@ export const freemusicPlugin = {
             return;
         }
 
-        await event.message.edit({ text: `Searching for \`${query}\`...` });
+        await event.message.edit({ text: `Searching and downloading \`${query}\`...` });
 
         try {
-            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
-            const response = await fetch(url);
+            const ytdlpBin = await getYtDlpBin();
+            const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "song-"));
+            const outTemplate = path.join(outDir, "%(title).80s.%(ext)s");
+
+            const args = [
+                `ytsearch1:${query} audio`,
+                "-o", outTemplate,
+                "--no-playlist",
+                "-x", "--audio-format", "mp3",
+                "--restrict-filenames"
+            ];
             
-            if (!response.ok) {
-                await event.message.edit({ text: `Error fetching from API: HTTP ${response.status}` });
+            if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) {
+                args.push("--cookies", path.join(process.cwd(), "cookies.txt"));
+            }
+
+            const proc = spawn(ytdlpBin, args);
+
+            let stderr = "";
+            proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
+
+            await new Promise<void>((resolve, reject) => {
+                proc.on("error", reject);
+                proc.on("close", (code) => {
+                    if (code !== 0) {
+                        const lastLine = stderr.trim().split("\n").filter(Boolean).pop();
+                        reject(new Error(lastLine || `yt-dlp exited with code ${code}`));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+
+            const files = fs.readdirSync(outDir);
+            if (files.length === 0) {
+                await event.message.edit({ text: `Could not find any music for \`${query}\`.` });
                 return;
             }
-
-            const data = await response.json();
-            if (!data.results || data.results.length === 0) {
-                await event.message.edit({ text: `Could not find any free music for \`${query}\`.` });
-                return;
-            }
-
-            const track = data.results[0];
-            const previewUrl = track.previewUrl;
-            const trackName = track.trackName;
-            const artistName = track.artistName;
-
-            if (!previewUrl) {
-                await event.message.edit({ text: `No download link available for \`${trackName}\` by \`${artistName}\`.` });
-                return;
-            }
-
-            await event.message.edit({ text: `Found \`${trackName}\` by \`${artistName}\`. Downloading...` });
-
-            const tempDir = path.join(process.cwd(), "downloads");
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir, { recursive: true });
-            }
-
-            // Using curl to download the audio file
-            const fileExt = previewUrl.split('.').pop() || "m4a";
-            // Clean filename
-            const cleanName = `${artistName} - ${trackName}`.replace(/[^a-zA-Z0-9 -]/g, "");
-            const filePath = path.join(tempDir, `${cleanName}.${fileExt}`);
-
-            await execPromise(`curl -sL "${previewUrl}" -o "${filePath}"`);
+            
+            const filePath = path.join(outDir, files[0]);
 
             await event.message.edit({ text: "Uploading 📤..." });
 
             await event.client?.sendMessage(event.message.chatId!, {
                 file: filePath,
-                message: `**${trackName}** by **${artistName}**\n*Preview audio (30s) downloaded using iTunes Search API*`
+                message: `**${query}**\n*Downloaded via .song*`
             });
             
             await event.message.delete();
