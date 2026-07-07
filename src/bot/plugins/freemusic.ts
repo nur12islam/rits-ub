@@ -41,7 +41,7 @@ export const freemusicPlugin = {
             const outTemplate = path.join(outDir, "%(title).80s.%(ext)s");
 
             const args = [
-                `ytsearch1:${query} audio`,
+                `scsearch1:${query}`,
                 "-o", outTemplate,
                 "--no-playlist",
                 "-x", "--audio-format", "mp3",
