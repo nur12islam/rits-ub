@@ -25,10 +25,15 @@ async function getYtDlpBin(): Promise<string> {
 export const songSearchCache = new Map<string, any[]>();
 
 export async function downloadAndSendSong(chatId: string | number, videoId: string, title: string, eventToEdit?: any) {
+    let statusMsg: any;
     try {
         if (eventToEdit) {
-            await eventToEdit.answer({ message: `Downloading ${title}...` }).catch(() => {});
+            await eventToEdit.answer({ message: "Download started..." }).catch(() => {});
         }
+        const peerId = typeof chatId === "string" && /^-?\d+$/.test(chatId) ? BigInt(chatId) : chatId;
+        
+        statusMsg = await botClient?.sendMessage(peerId, { message: `Downloading \`${title}\`...` });
+
         const ytdlpBin = await getYtDlpBin();
         const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "song-"));
         const outTemplate = path.join(outDir, "%(title).80s.%(ext)s");
@@ -64,33 +69,28 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
 
         const files = fs.readdirSync(outDir);
         if (files.length === 0) {
-            if (eventToEdit) await eventToEdit.answer({ message: `Could not download ${title}.` }).catch(() => {});
+            if (statusMsg) await statusMsg.edit({ text: `Could not download \`${title}\`.` });
             return;
         }
         
         const filePath = path.join(outDir, files[0]);
 
-        if (eventToEdit) {
-            await eventToEdit.answer({ message: "Uploading 📤..." }).catch(() => {});
-        }
+        if (statusMsg) await statusMsg.edit({ text: "Uploading 📤..." });
 
-        const peerId = typeof chatId === "string" && /^-?\d+$/.test(chatId) ? BigInt(chatId) : chatId; console.log('Downloading for peerId:', peerId);
-        console.log("Sending message to peerId:", peerId); await botClient?.sendMessage(peerId, {
+        await botClient?.sendMessage(peerId, {
             file: filePath,
             message: `**${title}**\n*Downloaded via .song*`
         });
         
-        if (eventToEdit) {
-            // Can't delete inline messages this way easily, let it stay
-        }
+        if (statusMsg) await statusMsg.delete().catch(() => {});
 
         fs.unlinkSync(filePath);
     } catch (e: any) {
-        if (eventToEdit) {
-            await eventToEdit.answer({ message: `Error: ${e.message}` }).catch(() => {});
+        if (statusMsg) {
+            await statusMsg.edit({ text: `Error downloading ${title}: ${e.message}` }).catch(() => {});
         } else {
-            const peerId = typeof chatId === "string" && !isNaN(Number(chatId)) ? BigInt(chatId) : chatId;
-            console.log("Sending message to peerId:", peerId); await botClient?.sendMessage(peerId, { message: `Error downloading ${title}: ${e.message}` });
+            const peerId = typeof chatId === "string" && /^-?\d+$/.test(chatId) ? BigInt(chatId) : chatId;
+            await botClient?.sendMessage(peerId, { message: `Error downloading ${title}: ${e.message}` });
         }
     }
 }
