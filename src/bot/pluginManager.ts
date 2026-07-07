@@ -28,6 +28,7 @@ export async function loadPlugins(client: TelegramClient) {
   // Define the plugin modules to load
   const modules = [
     await import("./plugins/ping.js"),
+    await import("./plugins/cookies.js"),
     await import("./plugins/help.js"),
     await import("./plugins/eval.js"),
     await import("./plugins/alive.js"),

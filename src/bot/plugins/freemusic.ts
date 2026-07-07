@@ -38,34 +38,46 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
         const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "song-"));
         const outTemplate = path.join(outDir, "%(title).80s.%(ext)s");
 
-        const args = [
-            `https://www.youtube.com/watch?v=${videoId}`,
-            "-o", outTemplate,
-            "--no-playlist",
-            "-x", "--audio-format", "mp3",
-            "--restrict-filenames"
-        ];
-        
-        if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) {
-            args.push("--cookies", path.join(process.cwd(), "cookies.txt"));
+        async function runYtDlp(urlArgs: string[]): Promise<void> {
+            return new Promise((resolve, reject) => {
+                const args = [
+                    ...urlArgs,
+                    "-o", outTemplate,
+                    "--no-playlist",
+                    "-x", "--audio-format", "mp3",
+                    "--restrict-filenames"
+                ];
+                if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) {
+                    args.push("--cookies", path.join(process.cwd(), "cookies.txt"));
+                }
+                const proc = spawn(ytdlpBin, args);
+                let stderr = "";
+                proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
+                proc.on("error", reject);
+                proc.on("close", (code) => {
+                    if (code !== 0) {
+                        const lastLine = stderr.trim().split("\n").filter(Boolean).pop();
+                        reject(new Error(lastLine || `yt-dlp exited with code ${code}`));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
         }
 
-        const proc = spawn(ytdlpBin, args);
-
-        let stderr = "";
-        proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
-
-        await new Promise<void>((resolve, reject) => {
-            proc.on("error", reject);
-            proc.on("close", (code) => {
-                if (code !== 0) {
-                    const lastLine = stderr.trim().split("\n").filter(Boolean).pop();
-                    reject(new Error(lastLine || `yt-dlp exited with code ${code}`));
-                } else {
-                    resolve();
-                }
-            });
-        });
+        try {
+            // First try YouTube
+            await runYtDlp([`https://www.youtube.com/watch?v=${videoId}`]);
+        } catch (ytError: any) {
+            console.log("YouTube download failed, trying SoundCloud...", ytError.message);
+            if (statusMsg) await statusMsg.edit({ text: `YouTube blocked download. Retrying via SoundCloud...` }).catch(()=>{});
+            try {
+                // Fallback to SoundCloud search and download first result
+                await runYtDlp([`scsearch1:${title}`]);
+            } catch (scError: any) {
+                throw new Error(`YouTube error: ${ytError.message} | SoundCloud error: ${scError.message}`);
+            }
+        }
 
         const files = fs.readdirSync(outDir);
         if (files.length === 0) {
