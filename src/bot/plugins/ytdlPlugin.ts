@@ -63,7 +63,7 @@ function downloadYoutube(url: string, options: YtdlOptions = {}): Promise<string
       args.push("-f", `bv*${heightFilter}+ba/b${heightFilter}`, "--merge-output-format", "mp4");
     }
 
-    const proc = spawn("python3", [ytdlpBin, ...args]);
+    const proc = spawn(ytdlpBin, args);
 
     let stderr = "";
     proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
