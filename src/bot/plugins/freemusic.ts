@@ -56,7 +56,7 @@ export async function downloadAndSendSong(chatId: string | number, videoId: stri
                 if (fs.existsSync(path.join(process.cwd(), "cookies.txt"))) {
                     args.push("--cookies", path.join(process.cwd(), "cookies.txt"));
                 }
-                const proc = spawn(ytdlpBin, args);
+                const proc = spawn("python3", [ytdlpBin, ...args]);
                 let stderr = "";
                 proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
                 proc.on("error", reject);

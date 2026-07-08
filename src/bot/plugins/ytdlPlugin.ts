@@ -22,11 +22,17 @@ const execPromise = util.promisify(exec);
 async function getYtDlpBin(): Promise<string> {
     const binDir = path.join(process.cwd(), "bin");
     const ytdlpPath = path.join(binDir, "yt-dlp");
-    if (fs.existsSync(ytdlpPath)) {
-        return ytdlpPath;
+    if (!fs.existsSync(ytdlpPath)) {
+        fs.mkdirSync(binDir, { recursive: true });
+        await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp`);
     }
-    fs.mkdirSync(binDir, { recursive: true });
-    await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp && chmod +x ${ytdlpPath}`);
+    try {
+        fs.chmodSync(ytdlpPath, "755");
+    } catch (e) {
+        try {
+            await execPromise(`chmod +x ${ytdlpPath}`);
+        } catch (e2) {}
+    }
     return ytdlpPath;
 }
 
@@ -57,7 +63,7 @@ function downloadYoutube(url: string, options: YtdlOptions = {}): Promise<string
       args.push("-f", `bv*${heightFilter}+ba/b${heightFilter}`, "--merge-output-format", "mp4");
     }
 
-    const proc = spawn(ytdlpBin, args);
+    const proc = spawn("python3", [ytdlpBin, ...args]);
 
     let stderr = "";
     proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
