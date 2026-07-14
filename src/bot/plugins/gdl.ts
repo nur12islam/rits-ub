@@ -67,7 +67,13 @@ export const gdlPlugin = {
             await message.delete({ revoke: true }).catch(() => {});
         } catch (error: any) {
             console.error("gdl error:", error);
-            await message.edit({ text: `**Failed to download or zip folder:** \`${error.message}\`` });
+            let errMsg = error.message;
+            if (errMsg.includes("HTTP 401")) {
+                errMsg = "Unauthorized. Please ensure the Google Drive folder is set to 'Anyone with the link can view' (Public). If it's already public, Google might be blocking anonymous access to this folder.";
+            } else if (errMsg.includes("HTTP 404")) {
+                errMsg = "Folder not found. Please check the URL.";
+            }
+            await message.edit({ text: `**Failed to download folder:** \n\`${errMsg}\`` });
         } finally {
             // Cleanup
             try {

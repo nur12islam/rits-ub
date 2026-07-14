@@ -11,6 +11,15 @@ let isForwarding = false;
 const originalConsoleError = console.error;
 
 console.error = function (...args: any[]) {
+    // Determine error type
+    let errorType = "Unknown Error";
+    const errorObj = args.find(a => a instanceof Error);
+    if (errorObj) {
+        errorType = errorObj.name || "Error";
+    } else if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('error')) {
+        errorType = "System Error";
+    }
+
     // Format the message
     const msg = args.map(a => {
         if (a instanceof Error) return a.stack || a.message;
@@ -30,7 +39,7 @@ console.error = function (...args: any[]) {
         
         const cleanMsg = msg.substring(0, 3500); // Telegram limits message size
         
-        logToChannel(`🚨 **Automatic Error Alert** 🚨\n\n**Details:**\n\`\`\`\n${cleanMsg}\n\`\`\``)
+        logToChannel(`🚨 **Error Alert** 🚨\n\n**Type:** \`${errorType}\`\n**Logs:**\n\`\`\`\n${cleanMsg}\n\`\`\``)
             .catch(() => {})
             .finally(() => {
                 isForwarding = false;

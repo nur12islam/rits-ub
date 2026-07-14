@@ -1,5 +1,5 @@
 import { NewMessageEvent } from "telegram/events/index.js";
-import { isOutgoing, logToChannel, botClient } from "../index.js";
+import { isOutgoing, logToChannel, botClient, botUser } from "../index.js";
 import { Api } from "telegram";
 import { Button } from "telegram/tl/custom/button.js";
 import { Pmpermit } from "../db/models/Pmpermit.js";
@@ -262,6 +262,8 @@ export default [
 ];
 
 export const rawListener = async (event: NewMessageEvent) => {
+  if (botUser && event.chatId?.toString() === botUser.id.toString()) return; // Ignore Saved Messages
+
   const pmPermitData = await loadPmPermit();
   if (isOutgoing(event)) {
       if (event.message.isPrivate) {

@@ -11,7 +11,7 @@ export let botClient: TelegramClient | null = null;
 export let assistantBot: TelegramClient | null = null;
 export let logChannelId: string | number | null = null;
 let isRunning = false;
-let botUser: any = null;
+export let botUser: any = null;
 
 export const COMMAND_PREFIX = Config.CMD_TRIGGER;
 export const sudoUsers = new Set<string>();
