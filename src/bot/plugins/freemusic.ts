@@ -19,7 +19,7 @@ async function getYtDlpBin(): Promise<string> {
         await execPromise(`curl -sLo ${ytdlpPath} https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp`);
     }
     try {
-        fs.chmodSync(ytdlpPath, "755");
+        fs.chmodSync(ytdlpPath, 0o755);
     } catch (e) {
         try {
             await execPromise(`chmod +x ${ytdlpPath}`);

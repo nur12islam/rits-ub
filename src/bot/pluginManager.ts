@@ -79,6 +79,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/gemini.js"),
     await import("./plugins/geminir.js"),
     await import("./plugins/geminidoc.js"),
+    await import("./plugins/qr.js"),
   ];
 
   for (const mod of modules) {
