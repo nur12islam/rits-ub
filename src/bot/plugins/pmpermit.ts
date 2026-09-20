@@ -273,12 +273,16 @@ export const rawListener = async (event: NewMessageEvent) => {
                pmPermitData.approved.push(chatId);
                await savePmPermit();
                
-               const user = await event.message.getSender() as any;
+               // For outgoing PMs, getChat() is the recipient.
+               // getSender() refers to our own account, which caused logs to show DARKI.
+               const recipient = await event.message.getChat() as any;
                let buttons = undefined;
                let mentionText = chatId;
-               if (user) {
-                   mentionText = user.firstName || user.username || "User";
-                   buttons = [[Button.url(mentionText, `tg://openmessage?user_id=${user.id}`)]];
+               if (recipient) {
+                   mentionText = recipient.firstName || recipient.username || recipient.title || "User";
+                   if (recipient.id) {
+                       buttons = [[Button.url(mentionText, `tg://openmessage?user_id=${recipient.id}`)]];
+                   }
                }
                
                await logToChannel(`**#AUTO_APPROVED**\n${mentionText}`, buttons);
