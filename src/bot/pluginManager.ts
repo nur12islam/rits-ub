@@ -32,6 +32,7 @@ export async function loadPlugins(client: TelegramClient) {
     await import("./plugins/help.js"),
     await import("./plugins/eval.js"),
     await import("./plugins/alive.js"),
+    await import("./plugins/ci.js"),
     await import("./plugins/id.js"),
     await import("./plugins/purge.js"),
     await import("./plugins/speedtest.js"),
