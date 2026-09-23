@@ -118,7 +118,8 @@ export const COMMAND_MAP: any = {
       "help",
       "id",
       "sysinfo",
-      "sg"
+      "sg",
+      "ci"
     ]
   },
 
