@@ -61,11 +61,11 @@ export async function logPluginError(pluginName: string, error: unknown, event?:
 
   const logText =
     `#ERROR_LOGS\n\n` +
-    `**Plugin name:** \\`${pluginName}\\`\n` +
-    `**Command:** \\`${command}\\`\n` +
-    `**Chat ID:** \\`${chatId}\\`\n` +
-    `**Sender ID:** \\`${senderId}\\`\n\n` +
-    `**Error:**\n\\`\\`\\`\n${stack.slice(0, 12000)}\n\\`\\`\\``;
+    `**Plugin name:** \`${pluginName}\`\n` +
+    `**Command:** \`${command}\`\n` +
+    `**Chat ID:** \`${chatId}\`\n` +
+    `**Sender ID:** \`${senderId}\`\n\n` +
+    `**Error:**\n\`\`\`\n${stack.slice(0, 12000)}\n\`\`\``;
 
   console.error(`[PLUGIN ERROR] ${pluginName}: ${stack}`);
 
@@ -75,7 +75,6 @@ export async function logPluginError(pluginName: string, error: unknown, event?:
     console.error("Failed to send plugin error to log channel:", logError);
   }
 }
-
 export async function startBot(
   sessionString: string,
   apiId: number,
