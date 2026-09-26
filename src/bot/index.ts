@@ -52,6 +52,30 @@ export async function logToChannel(message: string, buttons?: any) {
 export let lastError: string | null = null;
 export let floodWaitSeconds: number | null = null;
 
+export async function logPluginError(pluginName: string, error: unknown, event?: any) {
+  const err = error instanceof Error ? error : new Error(String(error));
+  const stack = err.stack || err.message || String(error);
+  const command = event?.message?.text ? String(event.message.text) : "Unknown";
+  const chatId = event?.chatId !== undefined && event?.chatId !== null ? String(event.chatId) : "Unknown";
+  const senderId = event?.message?.senderId !== undefined && event?.message?.senderId !== null ? String(event.message.senderId) : "Unknown";
+
+  const logText =
+    `#ERROR_LOGS\n\n` +
+    `**Plugin name:** \\`${pluginName}\\`\n` +
+    `**Command:** \\`${command}\\`\n` +
+    `**Chat ID:** \\`${chatId}\\`\n` +
+    `**Sender ID:** \\`${senderId}\\`\n\n` +
+    `**Error:**\n\\`\\`\\`\n${stack.slice(0, 12000)}\n\\`\\`\\``;
+
+  console.error(`[PLUGIN ERROR] ${pluginName}: ${stack}`);
+
+  try {
+    await logToChannel(logText);
+  } catch (logError) {
+    console.error("Failed to send plugin error to log channel:", logError);
+  }
+}
+
 export async function startBot(
   sessionString: string,
   apiId: number,
