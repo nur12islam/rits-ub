@@ -207,7 +207,7 @@ async function registerPlugin(plugin: Plugin, client: TelegramClient) {
     plugins.push(plugin);
   }
 
-  disabledPlugins.delete(plugin.command);
+  // Preserve persisted disabled state across restarts.
 
   try {
     await plugin.onLoad?.();
