@@ -7,6 +7,23 @@ import {
 } from "../pluginManager.js";
 import { Config } from "../config.js";
 
+function splitMessage(text: string, maxLength = 3900): string[] {
+  const chunks: string[] = [];
+  let remaining = text;
+
+  while (remaining.length > maxLength) {
+    let cut = remaining.lastIndexOf("\\n", maxLength);
+    if (cut < 500) cut = remaining.lastIndexOf(" ", maxLength);
+    if (cut < 1) cut = maxLength;
+
+    chunks.push(remaining.slice(0, cut));
+    remaining = remaining.slice(cut).replace(/^\\n+/, "").trimStart();
+  }
+
+  if (remaining.length) chunks.push(remaining);
+  return chunks;
+}
+
 function formatPlugin(plugin: any) {
   const aliases = plugin.aliases?.length ? `\\nAliases: ${plugin.aliases.join(", ")}` : "";
   const permissions = plugin.permissions?.length ? `\\nPermissions: ${plugin.permissions.join(", ")}` : "";
@@ -30,7 +47,12 @@ export default {
       const all = getAllPlugins();
       const lines = all.map((p) => `• .${p.command} — ${p.description}`);
       const header = `🔌 **RITS PLUGINS**\\n\\nTotal: ${all.length}\\n\\n`;
-      await event.message.edit({ text: header + lines.join("\\n") });
+      const chunks = splitMessage(header + lines.join("\\n"));
+      await event.message.edit({ text: chunks[0] });
+
+      for (const chunk of chunks.slice(1)) {
+        await event.message.reply({ message: chunk });
+      }
       return;
     }
 
