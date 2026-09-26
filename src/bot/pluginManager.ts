@@ -109,7 +109,15 @@ async function isAssistantPresentInChat(message: any): Promise<boolean> {
 
 export async function loadPlugins(client: TelegramClient) {
   console.log("Loading plugins...");
-  plugins.length = 0; // Reset on reload
+  for (const plugin of plugins) {
+    try {
+      await plugin.onUnload?.();
+    } catch (err) {
+      console.error(`Failed to unload plugin ${plugin.name} during reload:`, err);
+    }
+  }
+  plugins.length = 0;
+  disabledPlugins.clear();
 
   // Define the plugin modules to load
   const modules = [
@@ -329,6 +337,7 @@ async function handleAssistantCommand(event: NewMessageEvent) {
   if (!text.startsWith(ASSISTANT_PREFIX)) return;
 
   for (const plugin of plugins) {
+    if (disabledPlugins.has(plugin.command)) continue;
     if (plugin.ownerOnly && !isOwner) continue;
 
     const commandStr = ASSISTANT_PREFIX + plugin.command;
@@ -370,7 +379,7 @@ async function handleAssistantCommand(event: NewMessageEvent) {
   }
 }
 
-export async function loadDynamicPlugin(filePath: string) {
+export async function loadDynamicPlugin(filePath: string): Promise<Plugin[]> {
   const { botClient } = await import("./index.js");
   if (!botClient) throw new Error("Bot client not ready");
   
@@ -398,8 +407,9 @@ export async function loadDynamicPlugin(filePath: string) {
   if (mod.rawListener && typeof mod.rawListener === "function") {
     botClient.addEventHandler(mod.rawListener, new NewMessage({}));
   }
-  
+
   console.log(`Loaded dynamic plugin from ${filePath}`);
+  return getLoadedPlugins();
 }
 
 export function getLoadedPlugins() {
@@ -454,5 +464,5 @@ export async function reloadPlugin(filePath: string) {
   // Dynamic plugins are re-imported with a cache-busting query. Existing
   // command registrations are replaced atomically by registerPlugin().
   await loadDynamicPlugin(filePath);
-  return getPlugin(path.basename(filePath, path.extname(filePath)));
+  return getLoadedPlugins();
 }
