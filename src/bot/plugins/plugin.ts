@@ -17,16 +17,16 @@ export default {
   name: "Plugin Manager",
   description: "Inspect, enable, or disable RITS plugins.",
   command: "plugin",
-  usage: ".plugin [list|info <command>|enable <command>|disable <command>]",
+  usage: ".plugin [l|i|e|d] [command]",
   aliases: ["plugins"],
   category: "System",
   ownerOnly: true,
   handler: async (event: NewMessageEvent) => {
     const text = event.message.text || "";
     const args = text.trim().split(/\\s+/).slice(1);
-    const action = (args.shift() || "list").toLowerCase();
+    const action = (args.shift() || "l").toLowerCase();
 
-    if (action === "list") {
+    if (action === "l" || action === "list") {
       const all = getAllPlugins();
       const lines = all.map((p) => `• .${p.command} — ${p.description}`);
       const header = `🔌 **RITS PLUGINS**\\n\\nTotal: ${all.length}\\n\\n`;
@@ -36,7 +36,7 @@ export default {
 
     const target = args[0];
     if (!target) {
-      await event.message.edit({ text: "Usage: .plugin [list|info|enable|disable] <command>" });
+      await event.message.edit({ text: "Usage: .plugin [l|i|e|d] <command>" });
       return;
     }
 
@@ -46,18 +46,18 @@ export default {
       return;
     }
 
-    if (action === "info") {
+    if (action === "i" || action === "info") {
       await event.message.edit({ text: formatPlugin(plugin) });
       return;
     }
 
-    if (action === "enable") {
+    if (action === "e" || action === "enable") {
       await enablePlugin(plugin.command);
       await event.message.edit({ text: `✅ Enabled: .${plugin.command}` });
       return;
     }
 
-    if (action === "disable") {
+    if (action === "d" || action === "disable") {
       if (plugin.command === "plugin") {
         await event.message.edit({ text: "❌ The plugin manager cannot be disabled." });
         return;
