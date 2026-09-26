@@ -57,5 +57,6 @@ export const pluginModules = [
   () => import("./plugins/geminir.js"),
   () => import("./plugins/geminidoc.js"),
   () => import("./plugins/qr.js"),
+  () => import("./plugins/repo.js"),
   () => import("./plugins/gdl.js"),
 ];
