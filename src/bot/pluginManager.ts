@@ -120,7 +120,8 @@ export async function loadPlugins(client: TelegramClient) {
   plugins.length = 0;
   disabledPlugins.clear();
 
-  // Plugin modules are generated from every flat .ts plugin file.\n  const modules = await Promise.all(pluginModules.map((load) => load()));
+  // Plugin modules are generated from every flat .ts plugin file.
+  const modules = await Promise.all(pluginModules.map((load) => load()));
 
   for (const mod of modules) {
     // 1. Handle default export (single plugin or array of plugins)
