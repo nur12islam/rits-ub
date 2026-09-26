@@ -3,6 +3,7 @@ import { NewMessage, NewMessageEvent } from "telegram/events/index.js";
 import { COMMAND_PREFIX, isOutgoing, isSudo, logPluginError } from "./index.js";
 import { Config } from "./config.js";
 import path from "path";
+import { pluginModules } from "./pluginRegistry.generated.js";
 
 type CommandHandler = (event: NewMessageEvent) => Promise<void>;
 type PluginLifecycle = {
@@ -119,66 +120,7 @@ export async function loadPlugins(client: TelegramClient) {
   plugins.length = 0;
   disabledPlugins.clear();
 
-  // Define the plugin modules to load
-  const modules = [
-    await import("./plugins/ping.js"),
-    await import("./plugins/cookies.js"),
-    await import("./plugins/help.js"),
-    await import("./plugins/menu.js"),
-    await import("./plugins/plugin.js"),
-    await import("./plugins/eval.js"),
-    await import("./plugins/alive.js"),
-    await import("./plugins/ci.js"),
-    await import("./plugins/id.js"),
-    await import("./plugins/purge.js"),
-    await import("./plugins/speedtest.js"),
-    await import("./plugins/utube.js"),
-    await import("./plugins/gadmin.js"),
-    await import("./plugins/sysinfo.js"),
-    await import("./plugins/afk.js"),
-    await import("./plugins/sudo.js"),
-    await import("./plugins/channel.js"),
-    await import("./plugins/pmpermit.js"),
-    await import("./plugins/tools.js"),
-    await import("./plugins/user.js"),
-    await import("./plugins/notes.js"),
-    await import("./plugins/install.js"),
-    await import("./plugins/filter.js"),
-    await import("./plugins/gcast.js"),
-    await import("./plugins/system.js"),
-    await import("./plugins/exec.js"),
-    await import("./plugins/loggerCmds.js"),
-    await import("./plugins/fun.js"),
-    await import("./plugins/search.js"),
-    await import("./plugins/utilities2.js"),
-    await import("./plugins/spam2.js"),
-    await import("./plugins/profile.js"),
-    await import("./plugins/misc_plugins.js"),
-    await import("./plugins/ocr.js"),
-    await import("./plugins/error_logger.js"),
-    await import("./plugins/paste.js"),
-    await import("./plugins/sangmata.js"),
-    await import("./plugins/rmbg.js"),
-    await import("./plugins/cbutton.js"),
-    await import("./plugins/translate.js"),
-    await import("./plugins/upload.js"),
-    await import("./plugins/download.js"),
-    await import("./plugins/dictionary.js"),
-    await import("./plugins/weather.js"),
-    await import("./plugins/freemusic.js"),
-    await import("./plugins/joke.js"),
-    await import("./plugins/telegraph.js"),
-    await import("./plugins/ytdlPlugin.js"),
-    await import("./plugins/webss.js"),
-    await import("./plugins/quote.js"),
-    await import("./plugins/stickerify.js"),
-    await import("./plugins/kang.js"),
-    await import("./plugins/gemini.js"),
-    await import("./plugins/geminir.js"),
-    await import("./plugins/geminidoc.js"),
-    await import("./plugins/qr.js"),
-    await import("./plugins/gdl.js"),
-  ];
+  // Plugin modules are generated from every flat .ts plugin file.\n  const modules = await Promise.all(pluginModules.map((load) => load()));
 
   for (const mod of modules) {
     // 1. Handle default export (single plugin or array of plugins)
