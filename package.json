@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "dev": "npm run generate:plugins && tsx server.ts",
+    "build": "npm run generate:plugins && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
-    "postinstall": "puppeteer browsers install chrome"
+    "postinstall": "puppeteer browsers install chrome",
+    "generate:plugins": "tsx scripts/generate-plugin-registry.ts"
   },
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",
