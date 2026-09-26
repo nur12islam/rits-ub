@@ -1,6 +1,6 @@
 import { TelegramClient } from "telegram";
 import { NewMessage, NewMessageEvent } from "telegram/events/index.js";
-import { COMMAND_PREFIX, isOutgoing, isSudo } from "./index.js";
+import { COMMAND_PREFIX, isOutgoing, isSudo, logPluginError } from "./index.js";
 import { Config } from "./config.js";
 import path from "path";
 
@@ -271,6 +271,7 @@ async function handleIncomingCommand(event: NewMessageEvent) {
         await plugin.handler(event);
       } catch (err) {
         console.error(`Plugin ${plugin.name} error:`, err);
+        await logPluginError(plugin.name, err, event);
         await event.message.edit({
           text: `**Error in ${plugin.name}:** \`${String(err)}\``
         });
@@ -329,7 +330,8 @@ async function handleAssistantCommand(event: NewMessageEvent) {
         await plugin.handler(event);
       } catch (err) {
         console.error(`Plugin ${plugin.name} error:`, err);
-        await event.message.reply({
+          await logPluginError(plugin.name, err, event);
+          await event.message.reply({
           message: `**Error in ${plugin.name}:** \`${String(err)}\``
         });
       }
