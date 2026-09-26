@@ -21,6 +21,84 @@ const plugins: Plugin[] = [];
 
 let isListenerAttached = false;
 
+// Chat -> whether the assistant bot is present.
+// Presence is cached briefly because Telegram membership checks are relatively expensive.
+const assistantPresenceCache = new Map<string, { present: boolean; expiresAt: number }>();
+const ASSISTANT_PRESENCE_CACHE_MS = 30_000;
+
+function getMessageChatKey(message: any): string | null {
+  if (message?.chatId !== undefined && message?.chatId !== null) {
+    return message.chatId.toString();
+  }
+  if (message?.peerId) {
+    try {
+      return JSON.stringify(message.peerId);
+    } catch {}
+  }
+  return null;
+}
+
+async function isAssistantPresentInChat(message: any): Promise<boolean> {
+  const { assistantBot } = await import("./index.js");
+
+  if (!assistantBot || !message) return false;
+
+  const chatKey = getMessageChatKey(message);
+  if (!chatKey) return false;
+
+  const cached = assistantPresenceCache.get(chatKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.present;
+  }
+
+  let present = false;
+
+  try {
+    const assistantMe: any = await assistantBot.getMe();
+    const assistantId = assistantMe?.id?.toString();
+
+    // A private chat directly with the assistant bot.
+    if (assistantId && message.chatId?.toString() === assistantId) {
+      present = true;
+    } else if (message.peerId) {
+      const entity = await assistantBot.getInputEntity(message.peerId);
+
+      // Search the chat's participants when possible.
+      // This is the strongest check for groups/supergroups/channels.
+      if (assistantMe?.username) {
+        try {
+          for await (const user of assistantBot.iterParticipants(entity, {
+            search: assistantMe.username
+          })) {
+            if (user?.id?.toString() === assistantId) {
+              present = true;
+              break;
+            }
+          }
+        } catch {}
+      }
+
+      // Fallback: if participant lookup is unavailable, the assistant's
+      // dialog list still provides a reliable indication for chats it is in.
+      if (!present) {
+        try {
+          const dialogs = await assistantBot.getDialogs({ limit: 1000 });
+          present = dialogs.some(
+            (dialog: any) => dialog?.id?.toString() === chatKey
+          );
+        } catch {}
+      }
+    }
+  } catch {}
+
+  assistantPresenceCache.set(chatKey, {
+    present,
+    expiresAt: Date.now() + ASSISTANT_PRESENCE_CACHE_MS
+  });
+
+  return present;
+}
+
 export async function loadPlugins(client: TelegramClient) {
   console.log("Loading plugins...");
   plugins.length = 0; // Reset on reload
@@ -137,40 +215,65 @@ async function handleIncomingCommand(event: NewMessageEvent) {
   const message = event.message;
   const isOut = isOutgoing(event);
   const sudo = isSudo(event);
-  
-  if (!isOut && !sudo) return;
-
   const text = message.text || "";
-  if (!text.startsWith(COMMAND_PREFIX)) return;
+
+  // Normal/main-account commands use CMD_TRIGGER (normally ".").
+  // Sudo commands use SUDO_TRIGGER (normally "!").
+  const isSudoCommand = text.startsWith(Config.SUDO_TRIGGER);
+
+  if (isSudoCommand) {
+    // Incoming "!" commands are reserved for sudo users.
+    // Outgoing commands from the main account remain allowed.
+    if (!isOut && !sudo) return;
+
+    // If the assistant bot is in this chat, it has priority for "!" commands.
+    // The main userbot becomes the fallback when the assistant is not present.
+    if (!isOut && await isAssistantPresentInChat(message)) {
+      return;
+    }
+  } else {
+    if (!isOut && !sudo) return;
+    if (!text.startsWith(COMMAND_PREFIX)) return;
+  }
+
+  const prefix = isSudoCommand ? Config.SUDO_TRIGGER : COMMAND_PREFIX;
 
   for (const plugin of plugins) {
     if (plugin.ownerOnly && !isOut) continue;
 
-    const commandStr = COMMAND_PREFIX + plugin.command;
-    let isMatch = text === commandStr || text.startsWith(commandStr + " ") || text.startsWith(commandStr + "\n");
+    const commandStr = prefix + plugin.command;
+    let isMatch =
+      text === commandStr ||
+      text.startsWith(commandStr + " ") ||
+      text.startsWith(commandStr + "\n");
     
     if (!isMatch && plugin.aliases) {
-        for (const alias of plugin.aliases) {
-            const aliasStr = COMMAND_PREFIX + alias;
-            if (text === aliasStr || text.startsWith(aliasStr + " ") || text.startsWith(aliasStr + "\n")) {
-                isMatch = true;
-                break;
-            }
+      for (const alias of plugin.aliases) {
+        const aliasStr = prefix + alias;
+        if (
+          text === aliasStr ||
+          text.startsWith(aliasStr + " ") ||
+          text.startsWith(aliasStr + "\n")
+        ) {
+          isMatch = true;
+          break;
         }
+      }
     }
     
     if (isMatch) {
       if (!isOut) {
-          const originalEdit = message.edit.bind(message);
-          message.edit = async (args: any) => {
-              return await message.reply({ message: args.text, ...args });
-          };
+        message.edit = async (args: any) => {
+          return await message.reply({ message: args.text, ...args });
+        };
       }
       try {
         await plugin.handler(event);
       } catch (err) {
         console.error(`Plugin ${plugin.name} error:`, err);
-        await event.message.edit({ text: `**Error in ${plugin.name}:** \`${String(err)}\`` });
+        await event.message.edit({
+          text: `**Error in ${plugin.name}:** \`${String(err)}\``
+        });
       }
       return; // Stop after executing one command
     }
@@ -183,10 +286,13 @@ async function handleAssistantCommand(event: NewMessageEvent) {
   
   const message = event.message;
   const sudo = isSudo(event);
-  const isOwner = event.message.senderId ? Config.OWNER_ID.includes(Number(event.message.senderId)) : false;
+  const isOwner = event.message.senderId
+    ? Config.OWNER_ID.includes(Number(event.message.senderId))
+    : false;
   
   if (!sudo && !isOwner) return;
 
+  // Assistant/sudo handler is explicitly "!".
   const ASSISTANT_PREFIX = Config.SUDO_TRIGGER;
   const text = message.text || "";
   if (!text.startsWith(ASSISTANT_PREFIX)) return;
@@ -195,31 +301,39 @@ async function handleAssistantCommand(event: NewMessageEvent) {
     if (plugin.ownerOnly && !isOwner) continue;
 
     const commandStr = ASSISTANT_PREFIX + plugin.command;
-    let isMatch = text === commandStr || text.startsWith(commandStr + " ") || text.startsWith(commandStr + "\n");
+    let isMatch =
+      text === commandStr ||
+      text.startsWith(commandStr + " ") ||
+      text.startsWith(commandStr + "\n");
     
     if (!isMatch && plugin.aliases) {
-        for (const alias of plugin.aliases) {
-            const aliasStr = ASSISTANT_PREFIX + alias;
-            if (text === aliasStr || text.startsWith(aliasStr + " ") || text.startsWith(aliasStr + "\n")) {
-                isMatch = true;
-                break;
-            }
+      for (const alias of plugin.aliases) {
+        const aliasStr = ASSISTANT_PREFIX + alias;
+        if (
+          text === aliasStr ||
+          text.startsWith(aliasStr + " ") ||
+          text.startsWith(aliasStr + "\n")
+        ) {
+          isMatch = true;
+          break;
         }
+      }
     }
     
     if (isMatch) {
-        const originalEdit = message.edit.bind(message);
-        message.edit = async (args: any) => {
-            return await message.reply({ message: args.text, ...args });
-        };
-        (event as any).isAssistantBot = true;
-        try {
-          await plugin.handler(event);
-        } catch (err) {
-          console.error(`Plugin ${plugin.name} error:`, err);
-          await event.message.reply({ message: `**Error in ${plugin.name}:** \`${String(err)}\`` });
-        }
-        return; // Stop after executing one command
+      message.edit = async (args: any) => {
+        return await message.reply({ message: args.text, ...args });
+      };
+      (event as any).isAssistantBot = true;
+      try {
+        await plugin.handler(event);
+      } catch (err) {
+        console.error(`Plugin ${plugin.name} error:`, err);
+        await event.message.reply({
+          message: `**Error in ${plugin.name}:** \`${String(err)}\``
+        });
+      }
+      return; // Stop after executing one command
     }
   }
 }
