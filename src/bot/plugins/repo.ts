@@ -27,7 +27,7 @@ export default {
   name: "Plugin Repositories",
   description: "Manage trusted external plugin repository URLs.",
   command: "repo",
-  usage: ".repo l | .repo a <url> | .repo d <url>",
+  usage: ".repo l | .repo a <url> | .repo i <url> | .repo d <url>",
   aliases: ["repos", "rrepo"],
   category: "Developer",
   ownerOnly: true,
@@ -73,6 +73,23 @@ export default {
         return;
       }
 
+      if (action === "i" || action === "info") {
+        if (!args[0]) {
+          await event.message.edit({ text: "Usage: .repo i <url>" });
+          return;
+        }
+        const manifest = await fetchManifest(normalizeUrl(args[0]));
+        const lines = [
+          `📦 ${manifest.name}`,
+          `Version: ${manifest.version}`,
+          manifest.description ? `Description: ${manifest.description}` : "",
+          `Plugins: ${manifest.plugins.length}`,
+          ...manifest.plugins.slice(0, 25).map((p) => `• ${p.name}${p.version ? ` v${p.version}` : ""}`)
+        ].filter(Boolean);
+        await event.message.edit({ text: lines.join("\n") });
+        return;
+      }
+
       if (action === "d" || action === "remove" || action === "delete") {
         const raw = args[0];
         if (!raw) {
@@ -89,7 +106,7 @@ export default {
         return;
       }
 
-      await event.message.edit({ text: "Usage: .repo [l|a|d] [url]" });
+      await event.message.edit({ text: "Usage: .repo [l|a|i|d] [url]" });
     } catch (error: any) {
       await event.message.edit({ text: `❌ ${error?.message || "Repository operation failed."}` });
     }
