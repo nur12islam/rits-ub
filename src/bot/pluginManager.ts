@@ -249,6 +249,28 @@ async function registerPlugin(plugin: Plugin, client: TelegramClient) {
   }
 }
 
+async function hasPluginPermission(plugin: Plugin, event: NewMessageEvent, isOut: boolean, sudo: boolean): Promise<boolean> {
+  if (plugin.ownerOnly) {
+    const senderId = event.message.senderId?.toString();
+    return !!senderId && Config.OWNER_ID.map(String).includes(senderId) && isOut;
+  }
+
+  if (!plugin.permissions || plugin.permissions.length === 0) {
+    // Legacy plugins keep their existing behavior.
+    return isOut || sudo;
+  }
+
+  const senderId = event.message.senderId?.toString();
+  const owner = !!senderId && Config.OWNER_ID.map(String).includes(senderId);
+
+  if (plugin.permissions.includes("PUBLIC")) return true;
+  if (plugin.permissions.includes("OWNER") && owner) return true;
+  if (plugin.permissions.includes("SUDO") && (sudo || owner)) return true;
+  if (plugin.permissions.includes("SELF") && isOut) return true;
+
+  return false;
+}
+
 async function handleIncomingCommand(event: NewMessageEvent) {
   const message = event.message;
   const isOut = isOutgoing(event);
@@ -278,7 +300,7 @@ async function handleIncomingCommand(event: NewMessageEvent) {
 
   for (const plugin of plugins) {
     if (disabledPlugins.has(plugin.command)) continue;
-    if (plugin.ownerOnly && !isOut) continue;
+    if (!(await hasPluginPermission(plugin, event, isOut, sudo))) continue;
 
     const commandStr = prefix + plugin.command;
     let isMatch =
@@ -339,7 +361,7 @@ async function handleAssistantCommand(event: NewMessageEvent) {
 
   for (const plugin of plugins) {
     if (disabledPlugins.has(plugin.command)) continue;
-    if (plugin.ownerOnly && !isOwner) continue;
+    if (!(await hasPluginPermission(plugin, event, false, sudo))) continue;
 
     const commandStr = ASSISTANT_PREFIX + plugin.command;
     let isMatch =
