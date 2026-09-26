@@ -60,6 +60,25 @@ export default {
             const topItem = COMMAND_MAP[topKey];
             helpText += `➤ ${COMMAND_PREFIX}help ${topKey} - ${topItem.title}\n`;
         }
+
+        const mappedCommands = new Set<string>();
+        const collectMapped = (item: any) => {
+            if (item?.commands) item.commands.forEach((cmd: string) => mappedCommands.add(cmd));
+            if (item?.categories) Object.values(item.categories).forEach((child: any) => collectMapped(child));
+        };
+        Object.values(COMMAND_MAP).forEach((item: any) => collectMapped(item));
+
+        const extraPlugins = getLoadedPlugins()
+            .filter(p => !mappedCommands.has(p.command) && p.command !== "help")
+            .sort((a, b) => a.command.localeCompare(b.command));
+
+        if (extraPlugins.length) {
+            helpText += "\n📦 **Other Loaded Commands:**\n";
+            for (const p of extraPlugins) {
+                helpText += `➤ ${COMMAND_PREFIX}${p.command} - ${p.description}\n`;
+            }
+        }
+
         await event.message.edit({ text: helpText });
     } else {
         const query = args.join(" ").toLowerCase();
