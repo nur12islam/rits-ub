@@ -5,8 +5,12 @@ import { Config } from "./config.js";
 import path from "path";
 
 type CommandHandler = (event: NewMessageEvent) => Promise<void>;
+type PluginLifecycle = {
+  onLoad?: () => Promise<void> | void;
+  onUnload?: () => Promise<void> | void;
+};
 
-export interface Plugin {
+export interface Plugin extends PluginLifecycle {
   name: string;
   description: string;
   command: string;
@@ -14,10 +18,14 @@ export interface Plugin {
   aliases?: string[];
   category?: string;
   ownerOnly?: boolean;
+  permissions?: Array<"PUBLIC" | "SUDO" | "OWNER" | "SELF" | "GROUP_ADMIN">;
+  version?: string;
+  dependencies?: string[];
   handler: CommandHandler;
 }
 
 const plugins: Plugin[] = [];
+const disabledPlugins = new Set<string>();
 
 let isListenerAttached = false;
 
@@ -167,9 +175,9 @@ export async function loadPlugins(client: TelegramClient) {
     // 1. Handle default export (single plugin or array of plugins)
     if (mod.default) {
       if (Array.isArray(mod.default)) {
-        mod.default.forEach((p) => registerPlugin(p, client));
+        for (const p of mod.default) await registerPlugin(p, client);
       } else if (typeof mod.default === "object" && "command" in mod.default) {
-        registerPlugin(mod.default as Plugin, client);
+        await registerPlugin(mod.default as Plugin, client);
       }
     }
 
@@ -178,7 +186,7 @@ export async function loadPlugins(client: TelegramClient) {
       if (key === "default" || key === "rawListener") continue;
       const exp = (mod as any)[key];
       if (exp && typeof exp === "object" && "command" in exp) {
-        registerPlugin(exp as Plugin, client);
+        await registerPlugin(exp as Plugin, client);
       }
     }
 
@@ -203,13 +211,33 @@ export async function loadPlugins(client: TelegramClient) {
   console.log(`Successfully loaded ${plugins.length} commands.`);
 }
 
-function registerPlugin(plugin: Plugin, client: TelegramClient) {
-  if (plugins.find(p => p.command === plugin.command)) {
-    const idx = plugins.findIndex(p => p.command === plugin.command);
-    plugins[idx] = plugin; // Update existing plugin
-    return;
+async function registerPlugin(plugin: Plugin, client: TelegramClient) {
+  if (!plugin?.command || typeof plugin.handler !== "function") {
+    throw new Error("Invalid plugin: command and handler are required.");
   }
-  plugins.push(plugin);
+
+  const existingIndex = plugins.findIndex(p => p.command === plugin.command);
+  if (existingIndex >= 0) {
+    const existing = plugins[existingIndex];
+    try {
+      await existing.onUnload?.();
+    } catch (err) {
+      console.error(`Failed to unload plugin ${existing.name} during replacement:`, err);
+    }
+    plugins[existingIndex] = plugin;
+  } else {
+    plugins.push(plugin);
+  }
+
+  disabledPlugins.delete(plugin.command);
+
+  try {
+    await plugin.onLoad?.();
+  } catch (err) {
+    // Loading a plugin should not crash the entire userbot.
+    console.error(`Plugin ${plugin.name} onLoad failed:`, err);
+    await logPluginError(plugin.name, err);
+  }
 }
 
 async function handleIncomingCommand(event: NewMessageEvent) {
@@ -240,6 +268,7 @@ async function handleIncomingCommand(event: NewMessageEvent) {
   const prefix = isSudoCommand ? Config.SUDO_TRIGGER : COMMAND_PREFIX;
 
   for (const plugin of plugins) {
+    if (disabledPlugins.has(plugin.command)) continue;
     if (plugin.ownerOnly && !isOut) continue;
 
     const commandStr = prefix + plugin.command;
@@ -351,9 +380,9 @@ export async function loadDynamicPlugin(filePath: string) {
 
   if (mod.default) {
     if (Array.isArray(mod.default)) {
-      mod.default.forEach((p) => registerPlugin(p, botClient!));
+      for (const p of mod.default) await registerPlugin(p, botClient!);
     } else if (typeof mod.default === "object" && "command" in mod.default) {
-      registerPlugin(mod.default as Plugin, botClient!);
+      await registerPlugin(mod.default as Plugin, botClient!);
     }
   }
 
@@ -362,7 +391,7 @@ export async function loadDynamicPlugin(filePath: string) {
     if (key === "default" || key === "rawListener") continue;
     const exp = (mod as any)[key];
     if (exp && typeof exp === "object" && "command" in exp) {
-      registerPlugin(exp as Plugin, botClient!);
+      await registerPlugin(exp as Plugin, botClient!);
     }
   }
 
@@ -374,5 +403,56 @@ export async function loadDynamicPlugin(filePath: string) {
 }
 
 export function getLoadedPlugins() {
-  return plugins;
+  return plugins.filter((plugin) => !disabledPlugins.has(plugin.command));
+}
+
+export function getAllPlugins() {
+  return [...plugins];
+}
+
+export function getPlugin(commandOrAlias: string) {
+  const needle = commandOrAlias.replace(/^[.!/]/, "").toLowerCase();
+  return plugins.find(
+    (plugin) =>
+      plugin.command.toLowerCase() === needle ||
+      plugin.aliases?.some((alias) => alias.toLowerCase() === needle)
+  );
+}
+
+export function isPluginEnabled(command: string) {
+  return !disabledPlugins.has(command);
+}
+
+export async function enablePlugin(commandOrAlias: string) {
+  const plugin = getPlugin(commandOrAlias);
+  if (!plugin) throw new Error(`Plugin not found: ${commandOrAlias}`);
+  disabledPlugins.delete(plugin.command);
+  return plugin;
+}
+
+export async function disablePlugin(commandOrAlias: string) {
+  const plugin = getPlugin(commandOrAlias);
+  if (!plugin) throw new Error(`Plugin not found: ${commandOrAlias}`);
+  if (plugin.ownerOnly && plugin.command === "plugin") {
+    throw new Error("The plugin manager cannot be disabled.");
+  }
+  disabledPlugins.add(plugin.command);
+  return plugin;
+}
+
+export async function unloadPlugin(commandOrAlias: string) {
+  const plugin = getPlugin(commandOrAlias);
+  if (!plugin) throw new Error(`Plugin not found: ${commandOrAlias}`);
+  await plugin.onUnload?.();
+  const index = plugins.findIndex((item) => item.command === plugin.command);
+  if (index >= 0) plugins.splice(index, 1);
+  disabledPlugins.delete(plugin.command);
+  return plugin;
+}
+
+export async function reloadPlugin(filePath: string) {
+  // Dynamic plugins are re-imported with a cache-busting query. Existing
+  // command registrations are replaced atomically by registerPlugin().
+  await loadDynamicPlugin(filePath);
+  return getPlugin(path.basename(filePath, path.extname(filePath)));
 }
