@@ -4,6 +4,7 @@ import { COMMAND_PREFIX, isOutgoing, isSudo, logPluginError } from "./index.js";
 import { Config } from "./config.js";
 import path from "path";
 import { pluginModules } from "./pluginRegistry.generated.js";
+import { Var } from "./db/models/Var.js";
 
 type CommandHandler = (event: NewMessageEvent) => Promise<void>;
 type PluginLifecycle = {
@@ -27,6 +28,31 @@ export interface Plugin extends PluginLifecycle {
 
 const plugins: Plugin[] = [];
 const disabledPlugins = new Set<string>();
+const PLUGIN_STATE_PREFIX = "RITS_PLUGIN_DISABLED:";
+
+async function loadPluginState() {
+  disabledPlugins.clear();
+  try {
+    const states = await Var.find({ key: { $regex: `^${PLUGIN_STATE_PREFIX}` } });
+    for (const state of states) {
+      if (state.value === "true") disabledPlugins.add(state.key.slice(PLUGIN_STATE_PREFIX.length));
+    }
+  } catch (error) {
+    console.error("Failed to load plugin state from database:", error);
+  }
+}
+
+async function savePluginState(command: string, disabled: boolean) {
+  try {
+    await Var.findOneAndUpdate(
+      { key: `${PLUGIN_STATE_PREFIX}${command}` },
+      { value: disabled ? "true" : "false" },
+      { upsert: true, new: true }
+    );
+  } catch (error) {
+    console.error(`Failed to persist plugin state for ${command}:`, error);
+  }
+}
 
 let isListenerAttached = false;
 
@@ -118,7 +144,7 @@ export async function loadPlugins(client: TelegramClient) {
     }
   }
   plugins.length = 0;
-  disabledPlugins.clear();
+  await loadPluginState();
 
   // Plugin modules are generated from every flat .ts plugin file.
   const modules = await Promise.all(pluginModules.map((load) => load()));
@@ -403,6 +429,7 @@ export async function enablePlugin(commandOrAlias: string) {
   const plugin = getPlugin(commandOrAlias);
   if (!plugin) throw new Error(`Plugin not found: ${commandOrAlias}`);
   disabledPlugins.delete(plugin.command);
+  await savePluginState(plugin.command, false);
   return plugin;
 }
 
@@ -413,6 +440,7 @@ export async function disablePlugin(commandOrAlias: string) {
     throw new Error("The plugin manager cannot be disabled.");
   }
   disabledPlugins.add(plugin.command);
+  await savePluginState(plugin.command, true);
   return plugin;
 }
 
